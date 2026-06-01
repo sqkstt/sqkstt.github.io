@@ -1,0 +1,26 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const posts = await getCollection('blog', ({ data }) => !data.draft);
+const categoryCounts = posts.reduce<Map<string, number>>((counts, post) => {
+  counts.set(post.data.category, (counts.get(post.data.category) ?? 0) + 1);
+  return counts;
+}, new Map());
+const categories = [...categoryCounts.entries()].sort(([a], [b]) => a.localeCompare(b, 'zh-CN'));
+---
+
+<BaseLayout title="分类" description="按分类浏览中文技术博客文章。">
+  <section class="container page-intro">
+    <h1>分类</h1>
+    <p>每篇文章归入一个主分类，标签用于补充更细的主题。</p>
+  </section>
+
+  <section class="container tag-grid" aria-label="分类列表">
+    {
+      categories.length > 0
+        ? categories.map(([category, count]) => <a class="tag" href={`/categories/${encodeURIComponent(category)}/`}>{category} · {count}</a>)
+        : <p class="empty-state">还没有可浏览的分类。</p>
+    }
+  </section>
+</BaseLayout>

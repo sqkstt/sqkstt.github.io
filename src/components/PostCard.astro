@@ -1,0 +1,27 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  post: CollectionEntry<'blog'>;
+}
+
+const { post } = Astro.props;
+const date = post.data.pubDate.toLocaleDateString('zh-CN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<a class="post-card" href={`/blog/${post.id}/`}>
+  <div class="meta">
+    <time datetime={post.data.pubDate.toISOString()}>{date}</time>
+    <span>{post.data.category}</span>
+    {post.data.updatedDate && <span>更新于 {post.data.updatedDate.toLocaleDateString('zh-CN')}</span>}
+  </div>
+  <h2>{post.data.title}</h2>
+  <p>{post.data.description}</p>
+  <div class="tags" aria-label="文章标签">
+    {post.data.tags.map((tag) => <span class="tag">{tag}</span>)}
+  </div>
+</a>

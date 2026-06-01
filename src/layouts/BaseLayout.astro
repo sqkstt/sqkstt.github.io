@@ -1,0 +1,57 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  canonicalPath?: string;
+}
+
+const {
+  title = '中文技术博客',
+  description = '记录工程实践、技术学习和长期写作的中文技术博客。',
+  canonicalPath = Astro.url.pathname,
+} = Astro.props;
+
+const siteTitle = title === '中文技术博客' ? title : `${title} | 中文技术博客`;
+const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{siteTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="alternate" type="application/rss+xml" title="中文技术博客 RSS" href="/rss.xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={siteTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta name="twitter:card" content="summary" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="site-header">
+        <div class="container nav">
+          <a class="brand" href="/">中文技术博客</a>
+          <nav class="nav-links" aria-label="主导航">
+            <a href="/">首页</a>
+            <a href="/categories/">分类</a>
+            <a href="/tags/">标签</a>
+            <a href="/about/">关于</a>
+            <a href="/rss.xml">RSS</a>
+          </nav>
+        </div>
+      </header>
+      <main>
+        <slot />
+      </main>
+      <footer class="site-footer">
+        <div class="container">© {new Date().getFullYear()} 中文技术博客 · Built with Astro</div>
+      </footer>
+    </div>
+  </body>
+</html>

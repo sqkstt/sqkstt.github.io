@@ -1,0 +1,37 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  const categories = new Set(posts.map((post) => post.data.category));
+
+  return [...categories].map((category) => ({
+    params: { category },
+    props: {
+      category,
+      posts: posts
+        .filter((post) => post.data.category === category)
+        .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()),
+    },
+  }));
+}
+
+const { category, posts } = Astro.props;
+---
+
+<BaseLayout
+  title={`分类：${category}`}
+  description={`浏览分类 ${category} 下的文章。`}
+  canonicalPath={`/categories/${encodeURIComponent(category)}/`}
+>
+  <section class="container page-intro">
+    <h1>分类：{category}</h1>
+    <p>共 {posts.length} 篇文章。</p>
+  </section>
+
+  <section class="container post-list" aria-label={`${category} 分类文章列表`}>
+    {posts.map((post) => <PostCard post={post} />)}
+  </section>
+</BaseLayout>

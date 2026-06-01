@@ -1,17 +1,22 @@
 ---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/PostCard.astro';
 
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout>
+  <section class="container page-intro">
+    <h1>写给长期维护的中文技术笔记</h1>
+    <p>
+      记录工程实践、系统设计、开发工具和问题复盘。文章以 Markdown 维护，随代码一起版本化。
+    </p>
+  </section>
+
+  <section class="container post-list" aria-label="文章列表">
+    {posts.length > 0 ? posts.map((post) => <PostCard post={post} />) : <p class="empty-state">还没有发布文章。</p>}
+  </section>
+</BaseLayout>
