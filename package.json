@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
+    "editor": "node tools/editor/server.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
@@ -15,5 +16,16 @@
     "@astrojs/rss": "^4.0.18",
     "@astrojs/sitemap": "^3.7.3",
     "astro": "^6.4.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.4",
+    "express": "^5.2.1",
+    "gray-matter": "^4.0.3",
+    "lucide-react": "^1.17.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "vite": "^7.3.2"
   }
 }
