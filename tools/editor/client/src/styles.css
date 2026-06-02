@@ -375,6 +375,85 @@ button {
   font-weight: 700;
 }
 
+.chip.selected {
+  border-color: var(--accent);
+  background: #e8fbf8;
+  color: var(--accent-strong);
+}
+
+.quick-add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 64px;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.quick-add input {
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+  outline: 0;
+  color: var(--text);
+}
+
+.quick-add button {
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--accent-strong);
+  font-weight: 750;
+}
+
+.choice-section {
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+}
+
+.choice-title {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.choice-empty,
+.selected-tags span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.selected-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 34px;
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 8px;
+  background: var(--panel-soft);
+}
+
+.selected-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: #e8fbf8;
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 750;
+}
+
 .switch-row {
   display: flex;
   align-items: center;

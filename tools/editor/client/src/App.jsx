@@ -11,6 +11,7 @@ import {
   Plus,
   Save,
   Search,
+  X,
   Tag,
   UploadCloud,
 } from 'lucide-react';
@@ -73,6 +74,8 @@ function App() {
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState('write');
   const [status, setStatus] = useState('准备就绪');
+  const [categoryDraft, setCategoryDraft] = useState('');
+  const [tagDraft, setTagDraft] = useState('');
 
   async function refreshPosts(selectId = activeId) {
     const [{ posts: nextPosts }, nextTaxonomy] = await Promise.all([
@@ -163,6 +166,52 @@ function App() {
     setStatus('正在创建新草稿');
   }
 
+  async function openBlogPreview() {
+    const previewWindow = window.open('about:blank', '_blank');
+    try {
+      setStatus('正在启动博客预览...');
+      const result = await requestJson('/api/preview', { method: 'POST' });
+      if (previewWindow) {
+        previewWindow.location.href = result.url;
+      } else {
+        window.open(result.url, '_blank', 'noopener,noreferrer');
+      }
+      setStatus(result.started ? '博客预览已启动' : '博客预览已打开');
+    } catch (error) {
+      previewWindow?.close();
+      setStatus(error.message);
+    }
+  }
+
+  function addCategory() {
+    const nextCategory = categoryDraft.trim();
+    if (!nextCategory) return;
+    updatePost('category', nextCategory);
+    setTaxonomy((current) => ({
+      ...current,
+      categories: [...new Set([...current.categories, nextCategory])].sort((a, b) => a.localeCompare(b, 'zh-CN')),
+    }));
+    setCategoryDraft('');
+  }
+
+  function addTag(value = tagDraft) {
+    const nextTag = value.trim();
+    if (!nextTag) return;
+    updatePost('tags', [...new Set([...post.tags, nextTag])]);
+    setTaxonomy((current) => ({
+      ...current,
+      tags: [...new Set([...current.tags, nextTag])].sort((a, b) => a.localeCompare(b, 'zh-CN')),
+    }));
+    setTagDraft('');
+  }
+
+  function removeTag(tag) {
+    updatePost(
+      'tags',
+      post.tags.filter((current) => current !== tag),
+    );
+  }
+
   async function savePost() {
     try {
       setStatus('保存中...');
@@ -194,10 +243,10 @@ function App() {
           <div className="path-label">{context.rootDir || 'D:\\MyCode\\Blog'}</div>
         </div>
         <div className="top-actions">
-          <a className="ghost-button" href={context.blogPreviewUrl} target="_blank" rel="noreferrer">
+          <button className="ghost-button" type="button" onClick={openBlogPreview}>
             <Eye size={16} />
             预览博客
-          </a>
+          </button>
           <button className="ghost-button" type="button" title="保存后运行 git add、commit、push 发布">
             <UploadCloud size={16} />
             推送提醒
@@ -323,28 +372,88 @@ function App() {
             ))}
           </datalist>
         </label>
+        <div className="quick-add">
+          <input
+            value={categoryDraft}
+            onChange={(event) => setCategoryDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') addCategory();
+            }}
+            placeholder="新增分类"
+          />
+          <button type="button" onClick={addCategory}>
+            添加
+          </button>
+        </div>
+        <div className="choice-section">
+          <div className="choice-title">点击选择分类</div>
+          <div className="chip-shelf">
+            {taxonomy.categories.length > 0 ? (
+              taxonomy.categories.map((category) => (
+                <button
+                  className={`chip ${post.category === category ? 'selected' : ''}`}
+                  key={category}
+                  type="button"
+                  onClick={() => updatePost('category', category)}
+                >
+                  {category}
+                </button>
+              ))
+            ) : (
+              <span className="choice-empty">还没有分类，先添加一个。</span>
+            )}
+          </div>
+        </div>
         <label className="field">
           <span>
             <Tag size={15} />
             标签
           </span>
-          <input
-            value={tagText}
-            onChange={(event) => updatePost('tags', parseTags(event.target.value))}
-            placeholder="用逗号分隔，例如 Astro, 博客"
-          />
+          <input value={tagText} onChange={(event) => updatePost('tags', parseTags(event.target.value))} placeholder="已选标签，可用逗号编辑" />
         </label>
-        <div className="chip-shelf">
-          {taxonomy.tags.slice(0, 8).map((tag) => (
-            <button
-              className="chip"
-              key={tag}
-              type="button"
-              onClick={() => updatePost('tags', [...new Set([...post.tags, tag])])}
-            >
-              {tag}
-            </button>
-          ))}
+        <div className="selected-tags">
+          {post.tags.length > 0 ? (
+            post.tags.map((tag) => (
+              <button className="selected-tag" key={tag} type="button" onClick={() => removeTag(tag)} title="移除标签">
+                {tag}
+                <X size={12} />
+              </button>
+            ))
+          ) : (
+            <span>还没有选中标签。</span>
+          )}
+        </div>
+        <div className="quick-add">
+          <input
+            value={tagDraft}
+            onChange={(event) => setTagDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') addTag();
+            }}
+            placeholder="新增标签"
+          />
+          <button type="button" onClick={() => addTag()}>
+            添加
+          </button>
+        </div>
+        <div className="choice-section">
+          <div className="choice-title">点击添加已有标签</div>
+          <div className="chip-shelf">
+            {taxonomy.tags.length > 0 ? (
+              taxonomy.tags.map((tag) => (
+                <button
+                  className={`chip ${post.tags.includes(tag) ? 'selected' : ''}`}
+                  key={tag}
+                  type="button"
+                  onClick={() => (post.tags.includes(tag) ? removeTag(tag) : addTag(tag))}
+                >
+                  {tag}
+                </button>
+              ))
+            ) : (
+              <span className="choice-empty">还没有标签，先添加一个。</span>
+            )}
+          </div>
         </div>
         <label className="field">
           <span>

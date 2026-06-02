@@ -3,13 +3,16 @@ import matter from 'gray-matter';
 import { createServer as createViteServer } from 'vite';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
-import { basename, extname, join, relative, resolve } from 'node:path';
+import { spawn } from 'node:child_process';
+import { extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const rootDir = process.cwd();
 const editorDir = fileURLToPath(new URL('.', import.meta.url));
 const contentDir = resolve(rootDir, 'src/content/blog');
 const port = Number(process.env.EDITOR_PORT ?? 4322);
+const blogPreviewUrl = 'http://127.0.0.1:4321/';
+let previewProcess;
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
@@ -74,6 +77,56 @@ function normalizePost(id, parsed) {
 
 async function ensureContentDir() {
   await mkdir(contentDir, { recursive: true });
+}
+
+async function isUrlReady(url) {
+  try {
+    const response = await fetch(url);
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function waitForUrl(url, timeoutMs = 15000) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    if (await isUrlReady(url)) return true;
+    await new Promise((resolveWait) => setTimeout(resolveWait, 500));
+  }
+
+  return false;
+}
+
+async function ensureBlogPreview() {
+  if (await isUrlReady(blogPreviewUrl)) {
+    return { url: blogPreviewUrl, started: false };
+  }
+
+  if (!previewProcess || previewProcess.exitCode !== null) {
+    const command = process.platform === 'win32' ? 'cmd.exe' : 'npm';
+    const args =
+      process.platform === 'win32'
+        ? ['/d', '/s', '/c', 'npm run dev -- --host 127.0.0.1']
+        : ['run', 'dev', '--', '--host', '127.0.0.1'];
+
+    previewProcess = spawn(command, args, {
+      cwd: rootDir,
+      detached: true,
+      windowsHide: true,
+      stdio: 'ignore',
+    });
+
+    previewProcess.unref();
+  }
+
+  const ready = await waitForUrl(blogPreviewUrl);
+  if (!ready) {
+    throw new Error('博客预览服务启动超时，请在终端运行 npm run dev 查看错误');
+  }
+
+  return { url: blogPreviewUrl, started: true };
 }
 
 async function readPost(id) {
@@ -189,8 +242,16 @@ app.get('/api/context', (_req, res) => {
   res.json({
     rootDir,
     contentDir: relative(rootDir, contentDir),
-    blogPreviewUrl: 'http://127.0.0.1:4321/',
+    blogPreviewUrl,
   });
+});
+
+app.post('/api/preview', async (_req, res, next) => {
+  try {
+    res.json(await ensureBlogPreview());
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.use((error, _req, res, _next) => {
