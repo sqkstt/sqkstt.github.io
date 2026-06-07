@@ -1,6 +1,6 @@
 ---
 interface Props {
-  name: 'brand' | 'pen' | 'category' | 'tag' | 'deploy' | 'empty' | 'owl';
+  name: 'brand' | 'pen' | 'category' | 'tag' | 'deploy' | 'empty';
 }
 
 const { name } = Astro.props;
@@ -58,19 +58,6 @@ const { name } = Astro.props;
         <path d="M32 12l4.2 11.8L48 28l-11.8 4.2L32 52l-4.2-19.8L16 28l11.8-4.2L32 12z" />
         <path d="M18 44h10" />
         <path d="M46 18h-8" />
-      </>
-    )
-  }
-  {
-    name === 'owl' && (
-      <>
-        <path d="M17 25c0-10 7-16 15-16s15 6 15 16v11c0 11-7 19-15 19s-15-8-15-19V25z" />
-        <path d="M19 19l-6-8 12 4" />
-        <path d="M45 19l6-8-12 4" />
-        <path d="M23 29a7 7 0 1014 0 7 7 0 10-14 0" />
-        <path d="M31 29a7 7 0 1014 0 7 7 0 10-14 0" />
-        <path d="M32 33l-4 6h8l-4-6z" />
-        <path d="M24 46c4 4 12 4 16 0" />
       </>
     )
   }

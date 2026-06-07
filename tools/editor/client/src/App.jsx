@@ -244,7 +244,12 @@ function App() {
         <span className="meteor meteor-four"></span>
         <span className="meteor meteor-five"></span>
         <span className="meteor meteor-six"></span>
-        <span className="editor-owl"></span>
+        <span className="meteor meteor-seven"></span>
+        <span className="meteor meteor-eight"></span>
+        <span className="meteor meteor-nine"></span>
+        <span className="meteor meteor-ten meteor-pink"></span>
+        <span className="meteor meteor-eleven meteor-violet"></span>
+        <span className="meteor meteor-twelve meteor-short"></span>
       </div>
       <div className="app-shell">
         <header className="topbar">

@@ -92,115 +92,171 @@ textarea::placeholder {
 
 .meteor {
   position: absolute;
-  top: -18vh;
-  right: -18vw;
-  width: 190px;
-  height: 2px;
+  top: var(--meteor-top, -18vh);
+  right: var(--meteor-right, -18vw);
+  width: var(--meteor-width, 190px);
+  height: var(--meteor-height, 2px);
   border-radius: 999px;
   background:
     radial-gradient(circle at 100% 50%, #ffffff 0 2px, transparent 3px),
-    linear-gradient(90deg, transparent, rgba(144, 247, 255, 0.2), rgba(144, 247, 255, 0.95), rgba(255, 94, 168, 0.92));
-  filter: drop-shadow(0 0 8px rgba(37, 217, 255, 0.9)) drop-shadow(0 0 18px rgba(255, 94, 168, 0.35));
+    linear-gradient(90deg, transparent, var(--meteor-tail, rgba(144, 247, 255, 0.18)), var(--meteor-core, rgba(144, 247, 255, 0.95)), var(--meteor-tip, rgba(255, 94, 168, 0.92)));
+  filter: drop-shadow(0 0 8px var(--meteor-glow, rgba(37, 217, 255, 0.9))) drop-shadow(0 0 18px rgba(255, 94, 168, 0.25));
   opacity: 0;
-  transform: rotate(-32deg);
-  animation: meteor-flight 5.8s linear infinite;
+  transform: rotate(var(--meteor-angle, -32deg));
+  animation: meteor-flight var(--meteor-duration, 5.8s) linear infinite;
 }
 
 .meteor-two {
-  top: 10vh;
-  right: -22vw;
-  width: 220px;
+  --meteor-top: 10vh;
+  --meteor-right: -22vw;
+  --meteor-width: 220px;
   animation-delay: 0.8s;
-  animation-duration: 7.2s;
+  --meteor-duration: 7.2s;
 }
 
 .meteor-three {
-  top: -8vh;
-  right: 18vw;
-  width: 130px;
+  --meteor-top: -8vh;
+  --meteor-right: 18vw;
+  --meteor-width: 130px;
+  --meteor-angle: -43deg;
+  --meteor-x: -92vw;
+  --meteor-y: 88vh;
   animation-delay: 1.5s;
-  animation-duration: 6.4s;
+  --meteor-duration: 6.4s;
 }
 
 .meteor-four {
-  top: 32vh;
-  right: -24vw;
-  width: 145px;
+  --meteor-top: 32vh;
+  --meteor-right: -24vw;
+  --meteor-width: 145px;
+  --meteor-angle: -24deg;
+  --meteor-x: -132vw;
+  --meteor-y: 58vh;
   animation-delay: 2.2s;
-  animation-duration: 5.2s;
+  --meteor-duration: 5.2s;
 }
 
 .meteor-five {
-  top: -14vh;
-  right: 42vw;
-  width: 250px;
+  --meteor-top: -14vh;
+  --meteor-right: 42vw;
+  --meteor-width: 250px;
+  --meteor-height: 3px;
   animation-delay: 3.1s;
-  animation-duration: 8.4s;
+  --meteor-duration: 8.4s;
 }
 
 .meteor-six {
-  top: 52vh;
-  right: -18vw;
-  width: 170px;
+  --meteor-top: 52vh;
+  --meteor-right: -18vw;
+  --meteor-width: 170px;
+  --meteor-angle: -18deg;
+  --meteor-x: -116vw;
+  --meteor-y: 42vh;
   animation-delay: 3.8s;
-  animation-duration: 6.2s;
+  --meteor-duration: 6.2s;
+}
+
+.meteor-seven {
+  --meteor-top: 18vh;
+  --meteor-right: 8vw;
+  --meteor-width: 120px;
+  --meteor-angle: -38deg;
+  --meteor-x: -88vw;
+  --meteor-y: 66vh;
+  animation-delay: 4.6s;
+  --meteor-duration: 5.6s;
+}
+
+.meteor-eight {
+  --meteor-top: -20vh;
+  --meteor-right: -8vw;
+  --meteor-width: 210px;
+  --meteor-angle: -48deg;
+  --meteor-x: -96vw;
+  --meteor-y: 96vh;
+  animation-delay: 5.3s;
+  --meteor-duration: 7.8s;
+}
+
+.meteor-nine {
+  --meteor-top: 68vh;
+  --meteor-right: -30vw;
+  --meteor-width: 155px;
+  --meteor-angle: -16deg;
+  --meteor-x: -120vw;
+  --meteor-y: 34vh;
+  animation-delay: 6.1s;
+  --meteor-duration: 6.7s;
+}
+
+.meteor-ten {
+  --meteor-top: 4vh;
+  --meteor-right: 62vw;
+  --meteor-width: 110px;
+  --meteor-angle: -28deg;
+  --meteor-x: -84vw;
+  --meteor-y: 50vh;
+  animation-delay: 0.2s;
+  --meteor-duration: 4.9s;
+}
+
+.meteor-eleven {
+  --meteor-top: 44vh;
+  --meteor-right: 12vw;
+  --meteor-width: 235px;
+  --meteor-height: 3px;
+  --meteor-angle: -36deg;
+  --meteor-x: -118vw;
+  --meteor-y: 74vh;
+  animation-delay: 1.1s;
+  --meteor-duration: 8s;
+}
+
+.meteor-twelve {
+  --meteor-top: 26vh;
+  --meteor-right: 72vw;
+  --meteor-width: 86px;
+  --meteor-angle: -51deg;
+  --meteor-x: -68vw;
+  --meteor-y: 70vh;
+  animation-delay: 2.7s;
+  --meteor-duration: 4.5s;
+}
+
+.meteor-pink {
+  --meteor-tail: rgba(255, 94, 168, 0.16);
+  --meteor-core: rgba(255, 128, 190, 0.96);
+  --meteor-tip: rgba(144, 247, 255, 0.82);
+  --meteor-glow: rgba(255, 94, 168, 0.84);
+}
+
+.meteor-violet {
+  --meteor-tail: rgba(167, 139, 250, 0.18);
+  --meteor-core: rgba(191, 173, 255, 0.95);
+  --meteor-tip: rgba(144, 247, 255, 0.86);
+  --meteor-glow: rgba(167, 139, 250, 0.84);
+}
+
+.meteor-short {
+  --meteor-height: 1px;
 }
 
 @keyframes meteor-flight {
   0% {
     opacity: 0;
-    transform: translate3d(0, 0, 0) rotate(-32deg);
+    transform: translate3d(0, 0, 0) rotate(var(--meteor-angle, -32deg));
   }
   8% {
     opacity: 1;
   }
   28% {
     opacity: 0;
-    transform: translate3d(-125vw, 78vh, 0) rotate(-32deg);
+    transform: translate3d(var(--meteor-x, -125vw), var(--meteor-y, 78vh), 0) rotate(var(--meteor-angle, -32deg));
   }
   100% {
     opacity: 0;
-    transform: translate3d(-125vw, 78vh, 0) rotate(-32deg);
+    transform: translate3d(var(--meteor-x, -125vw), var(--meteor-y, 78vh), 0) rotate(var(--meteor-angle, -32deg));
   }
-}
-
-.editor-owl {
-  position: fixed;
-  right: 18px;
-  top: 50%;
-  width: 76px;
-  height: 76px;
-  border: 1px solid rgba(125, 211, 252, 0.2);
-  border-radius: 8px;
-  background:
-    radial-gradient(circle at 34px 30px, transparent 0 5px, rgba(144, 247, 255, 0.8) 6px 7px, transparent 8px),
-    radial-gradient(circle at 44px 30px, transparent 0 5px, rgba(144, 247, 255, 0.8) 6px 7px, transparent 8px),
-    radial-gradient(circle at 50% 54%, transparent 0 19px, rgba(144, 247, 255, 0.72) 20px 21px, transparent 22px),
-    linear-gradient(135deg, rgba(37, 217, 255, 0.1), rgba(255, 94, 168, 0.08)),
-    rgba(5, 10, 21, 0.38);
-  box-shadow: 0 0 34px rgba(37, 217, 255, 0.12);
-  opacity: 0.84;
-  transform: translateY(-50%);
-}
-
-.editor-owl::before,
-.editor-owl::after {
-  content: "";
-  position: absolute;
-  top: 14px;
-  width: 18px;
-  height: 18px;
-  border-top: 2px solid rgba(144, 247, 255, 0.72);
-}
-
-.editor-owl::before {
-  left: 16px;
-  transform: rotate(38deg);
-}
-
-.editor-owl::after {
-  right: 16px;
-  transform: rotate(-38deg);
 }
 
 .app-shell {
