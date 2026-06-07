@@ -11,17 +11,31 @@ const tags = [...tagCounts.entries()].sort(([a], [b]) => a.localeCompare(b, 'zh-
 ---
 
 <BaseLayout title="标签" description="按标签浏览中文技术博客文章。">
-  <section class="container page-intro decorated-intro">
+  <section class="container page-intro decorated-intro page-hero">
     <span class="page-symbol">#</span>
     <h1>标签</h1>
     <p>按主题整理文章，方便回看同一类问题的连续记录。</p>
   </section>
 
-  <section class="container tag-grid" aria-label="标签列表">
-    {
-      tags.length > 0
-        ? tags.map(([tag, count]) => <a class="tag" href={`/tags/${encodeURIComponent(tag)}/`}>{tag} · {count}</a>)
-        : <p class="empty-state">还没有可浏览的标签，后续发布文章时会从 frontmatter 自动生成。</p>
-    }
+  <section class="container directory-panel" aria-label="标签列表">
+    <div class="directory-head">
+      <h2>标签索引</h2>
+      <p>标签更适合记录工具、问题类型和技术关键词。</p>
+    </div>
+    <div class="tag-grid">
+      {
+        tags.length > 0
+          ? tags.map(([tag, count]) => <a class="tag directory-tag" href={`/tags/${encodeURIComponent(tag)}/`}>{tag} · {count}</a>)
+          : (
+              <div class="empty-state rich-empty wide-empty">
+                <span class="empty-icon">#</span>
+                <div>
+                  <strong>还没有可浏览的标签</strong>
+                  <p>后续发布文章时，标签会从 frontmatter 自动生成。</p>
+                </div>
+              </div>
+            )
+      }
+    </div>
   </section>
 </BaseLayout>

@@ -1,9 +1,10 @@
 :root {
   color-scheme: light;
-  --bg: #ffffff;
+  --bg: #fbfdfc;
   --surface: #f7faf9;
   --surface-strong: #eef5f3;
   --surface-warm: #fff8f3;
+  --surface-cool: #f3f7ff;
   --text: #18211f;
   --muted: #5e6d68;
   --border: #dce7e3;
@@ -11,6 +12,7 @@
   --accent-strong: #005d68;
   --accent-soft: #dff4f0;
   --accent-warm: #f26d5b;
+  --accent-violet: #8b6fd6;
   --code-bg: #f3f6f8;
   --shadow: 0 16px 48px rgba(24, 33, 31, 0.08);
   font-family:
@@ -29,11 +31,29 @@ html {
 }
 
 body {
+  position: relative;
   margin: 0;
   min-width: 320px;
   font-size: 16px;
   line-height: 1.75;
   letter-spacing: 0;
+  background:
+    linear-gradient(90deg, rgba(0, 124, 137, 0.045) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(0, 124, 137, 0.04) 1px, transparent 1px),
+    linear-gradient(180deg, #ffffff 0, var(--bg) 240px, #ffffff 100%);
+  background-size: 48px 48px, 48px 48px, auto;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 68px 0 auto;
+  height: 260px;
+  pointer-events: none;
+  background:
+    linear-gradient(110deg, rgba(223, 244, 240, 0.62), transparent 58%),
+    linear-gradient(250deg, rgba(255, 248, 243, 0.74), transparent 54%);
+  z-index: -1;
 }
 
 a {
@@ -47,6 +67,7 @@ a:hover {
 }
 
 .site-shell {
+  position: relative;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -59,7 +80,7 @@ a:hover {
 
 .site-header {
   border-bottom: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.86);
   backdrop-filter: blur(16px);
   position: sticky;
   top: 0;
@@ -136,6 +157,30 @@ main {
   font-size: 18px;
 }
 
+.page-hero {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  column-gap: 24px;
+  max-width: 960px;
+  min-height: 190px;
+  padding: 30px 34px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(243, 247, 255, 0.88)),
+    var(--bg);
+  box-shadow: 0 14px 36px rgba(24, 33, 31, 0.05);
+}
+
+.page-hero h1 {
+  grid-column: 2;
+  margin-top: 4px;
+}
+
+.page-hero p {
+  grid-column: 2;
+}
+
 .hero-panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
@@ -145,8 +190,12 @@ main {
   border: 1px solid var(--border);
   border-radius: 8px;
   background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.82) 0 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0 1px, transparent 1px),
     linear-gradient(135deg, rgba(223, 244, 240, 0.9), rgba(255, 248, 243, 0.92)),
     var(--surface);
+  background-size: 34px 34px, 34px 34px, auto, auto;
+  box-shadow: 0 18px 52px rgba(24, 33, 31, 0.08);
 }
 
 .hero-copy {
@@ -231,6 +280,7 @@ main {
   border: 1px solid rgba(185, 213, 206, 0.9);
   border-radius: 8px;
   background:
+    linear-gradient(135deg, rgba(139, 111, 214, 0.08), transparent 36%),
     radial-gradient(circle at center, rgba(255, 255, 255, 0.96) 0 42%, rgba(223, 244, 240, 0.7) 43% 100%),
     #ffffff;
   overflow: hidden;
@@ -281,7 +331,8 @@ main {
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--bg);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 30px rgba(24, 33, 31, 0.045);
 }
 
 .stat-icon {
@@ -355,7 +406,7 @@ main {
   padding: 24px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--bg);
+  background: rgba(255, 255, 255, 0.92);
   color: var(--text);
   text-decoration: none;
   transition:
@@ -440,6 +491,17 @@ main {
 .article {
   width: min(100% - 32px, 760px);
   margin-inline: auto;
+}
+
+.article-panel {
+  width: min(100% - 32px, 900px);
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(247, 250, 249, 0.9)),
+    var(--bg);
+  box-shadow: 0 16px 42px rgba(24, 33, 31, 0.06);
 }
 
 .article-header {
@@ -543,6 +605,45 @@ main {
   gap: 12px;
 }
 
+.directory-panel {
+  padding: 26px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14px 36px rgba(24, 33, 31, 0.05);
+}
+
+.directory-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.directory-head h2 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+.directory-head p {
+  max-width: 420px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  text-align: right;
+}
+
+.directory-tag {
+  min-height: 36px;
+  padding-inline: 14px;
+  background: var(--surface-cool);
+}
+
 .decorated-intro {
   position: relative;
   padding-left: 74px;
@@ -564,12 +665,24 @@ main {
   font-weight: 850;
 }
 
+.page-hero .page-symbol {
+  position: static;
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  background: #ffffff;
+  box-shadow: 0 10px 22px rgba(24, 33, 31, 0.06);
+}
+
 .empty-state {
   padding: 24px;
   border: 1px dashed var(--border);
   border-radius: 8px;
   background: var(--surface);
   color: var(--muted);
+}
+
+.wide-empty {
+  width: 100%;
 }
 
 .rich-empty {
@@ -618,6 +731,11 @@ main {
     padding: 36px 0 56px;
   }
 
+  body::before {
+    inset-top: 98px;
+    height: 220px;
+  }
+
   .hero-panel {
     grid-template-columns: 1fr;
     gap: 22px;
@@ -650,13 +768,47 @@ main {
     margin-bottom: 28px;
   }
 
+  .page-hero {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    padding: 22px;
+  }
+
   .decorated-intro {
     padding-left: 0;
-    padding-top: 62px;
+    padding-top: 0;
+  }
+
+  .page-hero .page-symbol {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .page-hero h1,
+  .page-hero p {
+    grid-column: 1;
   }
 
   .post-card {
     padding: 18px;
+  }
+
+  .article-panel {
+    padding: 22px;
+  }
+
+  .directory-panel {
+    padding: 18px;
+  }
+
+  .directory-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .directory-head p {
+    text-align: left;
   }
 
   .about-header {
