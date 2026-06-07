@@ -11,7 +11,8 @@ const tags = [...tagCounts.entries()].sort(([a], [b]) => a.localeCompare(b, 'zh-
 ---
 
 <BaseLayout title="标签" description="按标签浏览中文技术博客文章。">
-  <section class="container page-intro">
+  <section class="container page-intro decorated-intro">
+    <span class="page-symbol">#</span>
     <h1>标签</h1>
     <p>按主题整理文章，方便回看同一类问题的连续记录。</p>
   </section>
@@ -20,7 +21,7 @@ const tags = [...tagCounts.entries()].sort(([a], [b]) => a.localeCompare(b, 'zh-
     {
       tags.length > 0
         ? tags.map(([tag, count]) => <a class="tag" href={`/tags/${encodeURIComponent(tag)}/`}>{tag} · {count}</a>)
-        : <p class="empty-state">还没有可浏览的标签。</p>
+        : <p class="empty-state">还没有可浏览的标签，后续发布文章时会从 frontmatter 自动生成。</p>
     }
   </section>
 </BaseLayout>

@@ -36,7 +36,10 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
     <div class="site-shell">
       <header class="site-header">
         <div class="container nav">
-          <a class="brand" href="/">中文技术博客</a>
+          <a class="brand" href="/">
+            <span class="brand-mark">✦</span>
+            <span>sqkstt.log</span>
+          </a>
           <nav class="nav-links" aria-label="主导航">
             <a href="/">首页</a>
             <a href="/categories/">分类</a>
@@ -50,7 +53,10 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
         <slot />
       </main>
       <footer class="site-footer">
-        <div class="container">© {new Date().getFullYear()} 中文技术博客 · Built with Astro</div>
+        <div class="container footer-inner">
+          <span>© {new Date().getFullYear()} sqkstt.log</span>
+          <span>Astro · GitHub Pages · RSS</span>
+        </div>
       </footer>
     </div>
   </body>

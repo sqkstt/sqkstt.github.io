@@ -6,17 +6,78 @@ import PostCard from '../components/PostCard.astro';
 const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
+
+const categories = new Set(posts.map((post) => post.data.category));
+const tags = new Set(posts.flatMap((post) => post.data.tags));
 ---
 
 <BaseLayout>
-  <section class="container page-intro">
-    <h1>写给长期维护的中文技术笔记</h1>
-    <p>
-      记录工程实践、系统设计、开发工具和问题复盘。文章以 Markdown 维护，随代码一起版本化。
-    </p>
+  <section class="container hero-panel">
+    <div class="hero-copy">
+      <div class="hero-kicker">
+        <span class="spark-dot"></span>
+        本地写作 · 自动发布 · 长期维护
+      </div>
+      <h1>把踩坑、修复和工程灵感整理成可回看的技术笔记</h1>
+      <p>
+        这里记录网络排障、开发工具、系统实践和一些日常折腾。风格偏轻松，但内容尽量写清楚、可复现、方便以后再查。
+      </p>
+      <div class="hero-actions">
+        <a class="primary-link" href="/categories/">浏览分类</a>
+        <a class="secondary-link" href="/rss.xml">订阅 RSS</a>
+      </div>
+    </div>
+    <div class="hero-art" aria-label="Codex 桌宠博客吉祥物">
+      <img src="/assets/codex-pet-mascot.png" alt="Codex 自定义桌宠 Kaguya Tako" />
+      <div class="floating-badge badge-code">~/notes</div>
+      <div class="floating-badge badge-rss">RSS</div>
+    </div>
+  </section>
+
+  <section class="container dashboard-strip" aria-label="博客概览">
+    <div class="stat-card">
+      <span class="stat-icon">✎</span>
+      <strong>{posts.length}</strong>
+      <span>已发布文章</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon">#</span>
+      <strong>{categories.size}</strong>
+      <span>主题分类</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon">◇</span>
+      <strong>{tags.size}</strong>
+      <span>技术标签</span>
+    </div>
+    <div class="stat-card status-card">
+      <span class="stat-icon">⚡</span>
+      <strong>GitHub</strong>
+      <span>推送后自动部署</span>
+    </div>
+  </section>
+
+  <section class="container content-heading">
+    <div>
+      <h2>最新文章</h2>
+      <p>从最近一次问题复盘开始，慢慢把知识库补齐。</p>
+    </div>
+    <a href="/tags/">查看标签</a>
   </section>
 
   <section class="container post-list" aria-label="文章列表">
-    {posts.length > 0 ? posts.map((post) => <PostCard post={post} />) : <p class="empty-state">还没有发布文章。</p>}
+    {
+      posts.length > 0
+        ? posts.map((post) => <PostCard post={post} />)
+        : (
+            <div class="empty-state rich-empty">
+              <span class="empty-icon">✦</span>
+              <div>
+                <strong>还没有发布文章</strong>
+                <p>草稿会先留在本地，等整理完整后再公开。可以先从分类、标签和 RSS 入口了解这个博客的结构。</p>
+              </div>
+            </div>
+          )
+    }
   </section>
 </BaseLayout>
