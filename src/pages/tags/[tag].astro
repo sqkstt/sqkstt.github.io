@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PostCard from '../../components/PostCard.astro';
+import SiteIcon from '../../components/SiteIcon.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog', ({ data }) => !data.draft);
@@ -23,7 +24,7 @@ const { tag, posts } = Astro.props;
 
 <BaseLayout title={`标签：${tag}`} description={`浏览标签 ${tag} 下的文章。`} canonicalPath={`/tags/${encodeURIComponent(tag)}/`}>
   <section class="container page-intro page-hero">
-    <span class="page-symbol">#</span>
+    <span class="page-symbol"><SiteIcon name="tag" /></span>
     <h1>标签：{tag}</h1>
     <p>共 {posts.length} 篇文章。</p>
   </section>

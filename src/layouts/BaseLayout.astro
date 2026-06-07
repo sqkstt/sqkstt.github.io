@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import SiteIcon from '../components/SiteIcon.astro';
 
 interface Props {
   title?: string;
@@ -37,12 +38,19 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
       <span class="meteor meteor-one"></span>
       <span class="meteor meteor-two"></span>
       <span class="meteor meteor-three"></span>
+      <span class="meteor meteor-four"></span>
+      <span class="meteor meteor-five"></span>
+      <span class="meteor meteor-six"></span>
+      <span class="meteor meteor-seven"></span>
+      <span class="meteor meteor-eight"></span>
+      <span class="meteor meteor-nine"></span>
+      <div class="side-owl"><SiteIcon name="owl" /></div>
     </div>
     <div class="site-shell">
       <header class="site-header">
         <div class="container nav">
           <a class="brand" href="/">
-            <span class="brand-mark">✦</span>
+            <span class="brand-mark"><SiteIcon name="brand" /></span>
             <span>sqkstt.log</span>
           </a>
           <nav class="nav-links" aria-label="主导航">

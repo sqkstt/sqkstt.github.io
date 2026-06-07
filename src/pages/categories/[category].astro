@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PostCard from '../../components/PostCard.astro';
+import SiteIcon from '../../components/SiteIcon.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog', ({ data }) => !data.draft);
@@ -27,7 +28,7 @@ const { category, posts } = Astro.props;
   canonicalPath={`/categories/${encodeURIComponent(category)}/`}
 >
   <section class="container page-intro page-hero">
-    <span class="page-symbol">◇</span>
+    <span class="page-symbol"><SiteIcon name="category" /></span>
     <h1>分类：{category}</h1>
     <p>共 {posts.length} 篇文章。</p>
   </section>

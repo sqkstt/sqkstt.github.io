@@ -75,30 +75,80 @@ body {
   position: absolute;
   top: -18vh;
   right: -18vw;
-  width: 160px;
+  width: 190px;
   height: 2px;
   border-radius: 999px;
-  background: linear-gradient(90deg, transparent, rgba(144, 247, 255, 0.95), rgba(255, 94, 168, 0.9));
-  filter: drop-shadow(0 0 8px rgba(37, 217, 255, 0.9));
+  background:
+    radial-gradient(circle at 100% 50%, #ffffff 0 2px, transparent 3px),
+    linear-gradient(90deg, transparent, rgba(144, 247, 255, 0.2), rgba(144, 247, 255, 0.95), rgba(255, 94, 168, 0.92));
+  filter: drop-shadow(0 0 8px rgba(37, 217, 255, 0.9)) drop-shadow(0 0 18px rgba(255, 94, 168, 0.35));
   opacity: 0;
   transform: rotate(-32deg);
-  animation: meteor-flight 8s linear infinite;
+  animation: meteor-flight 5.8s linear infinite;
 }
 
 .meteor-two {
   top: 10vh;
   right: -22vw;
   width: 220px;
-  animation-delay: 2.6s;
-  animation-duration: 11s;
+  animation-delay: 0.8s;
+  animation-duration: 7.2s;
 }
 
 .meteor-three {
   top: -8vh;
   right: 18vw;
   width: 130px;
-  animation-delay: 5.4s;
-  animation-duration: 9s;
+  animation-delay: 1.5s;
+  animation-duration: 6.4s;
+}
+
+.meteor-four {
+  top: 32vh;
+  right: -24vw;
+  width: 145px;
+  animation-delay: 2.2s;
+  animation-duration: 5.2s;
+}
+
+.meteor-five {
+  top: -14vh;
+  right: 42vw;
+  width: 250px;
+  animation-delay: 3.1s;
+  animation-duration: 8.4s;
+}
+
+.meteor-six {
+  top: 52vh;
+  right: -18vw;
+  width: 170px;
+  animation-delay: 3.8s;
+  animation-duration: 6.2s;
+}
+
+.meteor-seven {
+  top: 18vh;
+  right: 8vw;
+  width: 120px;
+  animation-delay: 4.6s;
+  animation-duration: 5.6s;
+}
+
+.meteor-eight {
+  top: -20vh;
+  right: -8vw;
+  width: 210px;
+  animation-delay: 5.3s;
+  animation-duration: 7.8s;
+}
+
+.meteor-nine {
+  top: 68vh;
+  right: -30vw;
+  width: 155px;
+  animation-delay: 6.1s;
+  animation-duration: 6.7s;
 }
 
 @keyframes meteor-flight {
@@ -182,11 +232,59 @@ a:hover {
   box-shadow: 0 0 24px rgba(37, 217, 255, 0.14);
 }
 
+.icon-glyph {
+  width: 62%;
+  height: 62%;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.brand-mark .icon-glyph,
+.stat-icon .icon-glyph,
+.empty-icon .icon-glyph {
+  width: 66%;
+  height: 66%;
+}
+
+.page-symbol .icon-glyph {
+  width: 60%;
+  height: 60%;
+}
+
 .brand-mark {
   width: 30px;
   height: 30px;
   border-radius: 8px;
   font-size: 15px;
+}
+
+.side-owl {
+  position: fixed;
+  right: max(18px, calc((100vw - 1160px) / 2 - 86px));
+  top: 52%;
+  width: 74px;
+  height: 74px;
+  display: grid;
+  place-items: center;
+  color: rgba(144, 247, 255, 0.72);
+  border: 1px solid rgba(125, 211, 252, 0.18);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 28%, rgba(255, 94, 168, 0.16), transparent 38%),
+    rgba(5, 10, 21, 0.38);
+  box-shadow: 0 0 34px rgba(37, 217, 255, 0.12);
+  transform: translateY(-50%);
+  opacity: 0.86;
+}
+
+.side-owl .icon-glyph {
+  width: 64%;
+  height: 64%;
+  stroke-width: 2.8;
 }
 
 .nav-links {
@@ -772,6 +870,10 @@ main {
 
   .nav-links {
     gap: 14px;
+  }
+
+  .side-owl {
+    display: none;
   }
 
   main {
