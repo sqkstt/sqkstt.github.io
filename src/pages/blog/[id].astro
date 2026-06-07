@@ -21,7 +21,7 @@ const pubDate = post.data.pubDate.toLocaleDateString('zh-CN', {
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description} canonicalPath={`/blog/${post.id}/`}>
-  <article class="article">
+  <article class="article article-panel">
     <header class="article-header">
       <div class="meta">
         <time datetime={post.data.pubDate.toISOString()}>{pubDate}</time>

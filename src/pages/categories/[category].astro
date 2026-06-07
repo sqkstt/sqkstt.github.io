@@ -26,7 +26,8 @@ const { category, posts } = Astro.props;
   description={`浏览分类 ${category} 下的文章。`}
   canonicalPath={`/categories/${encodeURIComponent(category)}/`}
 >
-  <section class="container page-intro">
+  <section class="container page-intro page-hero">
+    <span class="page-symbol">◇</span>
     <h1>分类：{category}</h1>
     <p>共 {posts.length} 篇文章。</p>
   </section>
