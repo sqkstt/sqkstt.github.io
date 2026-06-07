@@ -78,8 +78,73 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
         </div>
       </footer>
     </div>
-    <div class="corner-pet" aria-hidden="true">
-      <img src="/assets/codex-pet-mascot.png" alt="" />
+    <div class="corner-pet" id="corner-pet" aria-hidden="true">
+      <div class="corner-pet-inner">
+        <img src="/assets/codex-pet-mascot.png" alt="" draggable="false" />
+      </div>
     </div>
+    <script is:inline>
+      (() => {
+        const pet = document.getElementById('corner-pet');
+        if (!pet) return;
+
+        const storageKey = 'sqkstt.cornerPet.position';
+        const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+        const place = (x, y) => {
+          const rect = pet.getBoundingClientRect();
+          const nextX = clamp(x, 0, window.innerWidth - rect.width);
+          const nextY = clamp(y, 0, window.innerHeight - rect.height);
+          pet.style.left = `${nextX}px`;
+          pet.style.top = `${nextY}px`;
+          pet.style.right = 'auto';
+          pet.style.bottom = 'auto';
+        };
+
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+          try {
+            const { x, y } = JSON.parse(saved);
+            requestAnimationFrame(() => place(Number(x), Number(y)));
+          } catch {
+            localStorage.removeItem(storageKey);
+          }
+        }
+
+        let drag = null;
+        pet.addEventListener('pointerdown', (event) => {
+          if (event.button !== undefined && event.button !== 0) return;
+          const rect = pet.getBoundingClientRect();
+          drag = {
+            offsetX: event.clientX - rect.left,
+            offsetY: event.clientY - rect.top,
+          };
+          pet.classList.add('dragging');
+          pet.setPointerCapture?.(event.pointerId);
+          event.preventDefault();
+        });
+
+        pet.addEventListener('pointermove', (event) => {
+          if (!drag) return;
+          place(event.clientX - drag.offsetX, event.clientY - drag.offsetY);
+        });
+
+        const endDrag = (event) => {
+          if (!drag) return;
+          drag = null;
+          pet.classList.remove('dragging');
+          pet.releasePointerCapture?.(event.pointerId);
+          const rect = pet.getBoundingClientRect();
+          localStorage.setItem(storageKey, JSON.stringify({ x: rect.left, y: rect.top }));
+        };
+
+        pet.addEventListener('pointerup', endDrag);
+        pet.addEventListener('pointercancel', endDrag);
+        window.addEventListener('resize', () => {
+          const rect = pet.getBoundingClientRect();
+          if (getComputedStyle(pet).display !== 'none') place(rect.left, rect.top);
+        });
+      })();
+    </script>
   </body>
 </html>

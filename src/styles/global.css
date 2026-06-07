@@ -309,16 +309,28 @@ a:hover {
 
 .corner-pet {
   position: fixed;
-  right: max(12px, calc((100vw - 1180px) / 2 - 18px));
-  bottom: 8px;
-  z-index: 8;
-  width: clamp(138px, 12vw, 184px);
-  pointer-events: none;
+  right: 10px;
+  bottom: 6px;
+  z-index: 20;
+  width: clamp(140px, 12vw, 186px);
+  cursor: grab;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  transform-origin: 50% 100%;
+}
+
+.corner-pet.dragging {
+  cursor: grabbing;
+}
+
+.corner-pet-inner {
+  position: relative;
   transform-origin: 50% 100%;
   animation: pet-float 4.8s ease-in-out infinite;
 }
 
-.corner-pet::before {
+.corner-pet-inner::before {
   content: "";
   position: absolute;
   left: 14%;
@@ -332,7 +344,7 @@ a:hover {
   animation: pet-shadow 4.8s ease-in-out infinite;
 }
 
-.corner-pet::after {
+.corner-pet-inner::after {
   content: "";
   position: absolute;
   left: 35%;
@@ -992,9 +1004,9 @@ main {
 
 @media (prefers-reduced-motion: reduce) {
   .meteor,
-  .corner-pet,
-  .corner-pet::before,
-  .corner-pet::after {
+  .corner-pet-inner,
+  .corner-pet-inner::before,
+  .corner-pet-inner::after {
     animation: none;
   }
 }
