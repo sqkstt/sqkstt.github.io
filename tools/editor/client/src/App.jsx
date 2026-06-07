@@ -236,8 +236,18 @@ function App() {
   }
 
   return (
-    <div className="app-shell">
-      <header className="topbar">
+    <>
+      <div className="editor-space-bg" aria-hidden="true">
+        <span className="meteor meteor-one"></span>
+        <span className="meteor meteor-two"></span>
+        <span className="meteor meteor-three"></span>
+        <span className="meteor meteor-four"></span>
+        <span className="meteor meteor-five"></span>
+        <span className="meteor meteor-six"></span>
+        <span className="editor-owl"></span>
+      </div>
+      <div className="app-shell">
+        <header className="topbar">
         <div>
           <div className="app-title">本地博客编辑器</div>
           <div className="path-label">{context.rootDir || 'D:\\MyCode\\Blog'}</div>
@@ -256,9 +266,9 @@ function App() {
             保存文章
           </button>
         </div>
-      </header>
+        </header>
 
-      <aside className="sidebar">
+        <aside className="sidebar">
         <div className="sidebar-header">
           <h2>文章</h2>
           <button className="icon-button" type="button" onClick={createDraft} title="新建文章" aria-label="新建文章">
@@ -302,9 +312,9 @@ function App() {
             <div className="empty-panel">没有匹配的文章。</div>
           )}
         </div>
-      </aside>
+        </aside>
 
-      <main className="editor-main">
+        <main className="editor-main">
         <div className="title-fields">
           <input
             className="title-input"
@@ -351,9 +361,9 @@ function App() {
             </article>
           )}
         </div>
-      </main>
+        </main>
 
-      <aside className="inspector">
+        <aside className="inspector">
         <h2>文章设置</h2>
         <label className="field">
           <span>
@@ -481,8 +491,9 @@ function App() {
           <input type="checkbox" checked={post.draft} onChange={(event) => updatePost('draft', event.target.checked)} />
         </label>
         <div className="save-state">{status}</div>
-      </aside>
-    </div>
+        </aside>
+      </div>
+    </>
   );
 }
 
