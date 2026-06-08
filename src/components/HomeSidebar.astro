@@ -1,0 +1,59 @@
+---
+interface Props {
+  popularTags: Array<[string, number]>;
+}
+
+const { popularTags } = Astro.props;
+---
+
+<aside class="home-sidebar">
+  <!-- Author card -->
+  <div class="toc-section">
+    <div class="home-author">
+      <img
+        src="/assets/codex-pet-mascot.png"
+        alt="Mascot"
+        class="home-author-img"
+        draggable="false"
+      />
+      <div class="home-author-text">
+        <strong>sqkstt777</strong>
+        <p>记录踩坑、修复和工程灵感，整理成可回看的技术笔记。</p>
+      </div>
+    </div>
+    <a href="/about/" class="home-side-link">了解更多 &rarr;</a>
+  </div>
+
+  <hr class="toc-divider" />
+
+  <!-- Popular tags -->
+  <h3 class="toc-heading">热门标签</h3>
+  {
+    popularTags.length > 0 ? (
+      <div class="toc-tags">
+        {popularTags.map(([tag, count]) => (
+          <a class="tag" href={`/tags/${encodeURIComponent(tag)}/`}>{tag} &middot; {count}</a>
+        ))}
+      </div>
+    ) : (
+      <p style="color:var(--muted);font-size:12px;margin:4px 0 0;">
+        发布文章后，热门标签会自动出现。
+      </p>
+    )
+  }
+  <a href="/tags/" class="home-side-link" style="margin-top:8px;">查看全部标签 &rarr;</a>
+
+  <hr class="toc-divider" />
+
+  <!-- RSS subscription -->
+  <div class="home-rss">
+    <div class="home-rss-icon" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+    </div>
+    <div class="home-rss-text">
+      <strong>RSS 订阅</strong>
+      <p>第一时间获取最新文章</p>
+    </div>
+  </div>
+  <a href="/rss.xml" class="home-side-link home-side-primary">订阅 RSS &rarr;</a>
+</aside>

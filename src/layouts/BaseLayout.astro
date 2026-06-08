@@ -34,7 +34,9 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
     <meta name="twitter:card" content="summary" />
   </head>
   <body>
+    <div class="reading-progress" id="reading-progress" aria-hidden="true"></div>
     <div class="space-bg" aria-hidden="true">
+      <canvas class="starfield-canvas" id="starfield-canvas" aria-hidden="true"></canvas>
       <span class="meteor meteor-one"></span>
       <span class="meteor meteor-two"></span>
       <span class="meteor meteor-three"></span>
@@ -57,13 +59,13 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
         <div class="container nav">
           <a class="brand" href="/">
             <span class="brand-mark"><SiteIcon name="brand" /></span>
-            <span>sqkstt.log</span>
+            <span>sqkstt777</span>
           </a>
           <nav class="nav-links" aria-label="主导航">
-            <a href="/">首页</a>
-            <a href="/categories/">分类</a>
-            <a href="/tags/">标签</a>
-            <a href="/about/">关于</a>
+            <a href="/" class:list={[Astro.url.pathname === '/' ? 'active' : '']}>首页</a>
+            <a href="/categories/" class:list={[Astro.url.pathname.startsWith('/categories') ? 'active' : '']}>分类</a>
+            <a href="/tags/" class:list={[Astro.url.pathname.startsWith('/tags') ? 'active' : '']}>标签</a>
+            <a href="/about/" class:list={[Astro.url.pathname === '/about/' ? 'active' : '']}>关于</a>
             <a href="/rss.xml">RSS</a>
           </nav>
         </div>
@@ -73,11 +75,12 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
       </main>
       <footer class="site-footer">
         <div class="container footer-inner">
-          <span>© {new Date().getFullYear()} sqkstt.log</span>
+          <span>© {new Date().getFullYear()} sqkstt777</span>
           <span>Astro · GitHub Pages · RSS</span>
         </div>
       </footer>
     </div>
+    <button class="back-to-top" id="back-to-top" aria-label="返回顶部">&uarr;</button>
     <div class="corner-pet" id="corner-pet" aria-hidden="true">
       <div class="corner-pet-inner">
         <img src="/assets/codex-pet-mascot.png" alt="" draggable="false" />
@@ -144,6 +147,306 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
           const rect = pet.getBoundingClientRect();
           if (getComputedStyle(pet).display !== 'none') place(rect.left, rect.top);
         });
+      })();
+    </script>
+    <script is:inline>
+      (function() {
+        var canvas = document.getElementById('starfield-canvas');
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+        var stars = [];
+        var constellations = [];
+        var animId = null;
+        var W = 0, H = 0;
+
+        function resize() {
+          var dpr = Math.min(window.devicePixelRatio || 1, 2);
+          W = window.innerWidth;
+          H = window.innerHeight;
+          canvas.width = W * dpr;
+          canvas.height = H * dpr;
+          canvas.style.width = W + 'px';
+          canvas.style.height = H + 'px';
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        function makeStars() {
+          var count = Math.floor((W * H) / 500);
+          stars = [];
+          var i, s, radius, r, g, b;
+          for (i = 0; i < count; i++) {
+            s = Math.random();
+            if (s < 0.70)      radius = 0.3 + Math.random() * 0.8;
+            else if (s < 0.90) radius = 0.8 + Math.random() * 1.8;
+            else if (s < 0.98) radius = 1.8 + Math.random() * 2.2;
+            else               radius = 3.0 + Math.random() * 3.5;
+
+            var hr = Math.random();
+            if (hr < 0.55)      { r = 185; g = 210; b = 230; }
+            else if (hr < 0.85) { r = 230; g = 228; b = 215; }
+            else if (hr < 0.95) { r = 245; g = 195; b = 125; }
+            else if (hr < 0.99) { r = 135; g = 180; b = 240; }
+            else                { r = 240; g = 145; b = 90; }
+            r += Math.floor(Math.random() * 40);
+            g += Math.floor(Math.random() * 30);
+            b += Math.floor(Math.random() * 20);
+
+            stars.push({
+              x: Math.random() * W,
+              y: Math.random() * H,
+              radius: radius,
+              r: r, g: g, b: b,
+              baseA: 0.3 + Math.random() * 0.7,
+              spd: 0.3 + Math.random() * 2.5,
+              ph: Math.random() * Math.PI * 2,
+              amp: 0.05 + Math.random() * 0.5,
+              stl: Math.floor(Math.random() * 3),
+            });
+          }
+        }
+
+        function makeCons() {
+          var patterns = [
+            { pts: [[130,5],[105,40],[80,80],[80,80],[45,70],[20,115],[55,130]], ln: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,3]] },
+            { pts: [[30,5],[110,5],[45,70],[75,70],[105,70],[20,135],[125,130]], ln: [[0,2],[0,3],[1,3],[1,4],[2,3],[3,4],[2,5],[4,6],[5,6]] },
+            { pts: [[5,20],[35,5],[65,25],[95,5],[125,20]], ln: [[0,1],[1,2],[2,3],[3,4]] },
+            { pts: [[5,60],[30,30],[55,15],[80,20],[65,50],[40,65],[50,115]], ln: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[5,6]] },
+            { pts: [[65,5],[80,30],[90,60],[80,90],[55,115],[30,130],[15,115]], ln: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6]] },
+            { pts: [[30,10],[80,10],[30,50],[5,60],[30,70],[80,70],[55,50],[55,95]], ln: [[0,2],[1,2],[0,1],[2,3],[3,4],[2,4],[4,7],[4,5],[5,7],[2,6],[6,5]] },
+            { pts: [[65,5],[65,50],[10,85],[65,85],[120,85],[65,120],[65,155]], ln: [[0,1],[1,2],[1,3],[1,4],[3,5],[5,6]] },
+          ];
+          constellations = [];
+          var sc = Math.min(W, H) * 0.0015;
+          var positions = [
+            [0.05, 0.22], [0.28, 0.08], [0.58, 0.18],
+            [0.12, 0.55], [0.50, 0.35], [0.72, 0.52],
+            [0.24, 0.75],
+          ];
+          for (var c = 0; c < patterns.length; c++) {
+            var p = patterns[c];
+            var px = positions[c][0] * W;
+            var py = positions[c][1] * H;
+
+            var pts = [];
+            for (var i = 0; i < p.pts.length; i++) {
+              pts.push({ x: px + p.pts[i][0] * sc, y: py + p.pts[i][1] * sc });
+              stars.push({
+                x: pts[i].x, y: pts[i].y,
+                radius: 2.5 + Math.random() * 3.5,
+                r: 210, g: 228, b: 248,
+                baseA: 0.8 + Math.random() * 0.2,
+                spd: 0.1 + Math.random() * 0.3,
+                ph: Math.random() * Math.PI * 2,
+                amp: 0.02 + Math.random() * 0.1,
+                stl: 0, conId: c,
+              });
+            }
+            constellations.push({ pts: pts, ln: p.ln });
+          }
+        }
+
+        function drawStar(s, t) {
+          var a = s.baseA;
+          var v = Math.sin(t * s.spd + s.ph);
+          if (s.stl === 0)      a = a * (1 - s.amp * 0.6 + s.amp * 0.6 * v);
+          else if (s.stl === 1)  a = a * (1 - s.amp + s.amp * Math.abs(v));
+          else                   a = a * (1 - s.amp + s.amp * Math.pow(Math.abs(Math.sin(t * s.spd * 1.6 + s.ph)), 4));
+          if (a < 0) a = 0; if (a > 1) a = 1;
+          if (s.conId !== undefined) { a = a * 1.6; if (a > 1) a = 1; }
+          if (a < 0.025) return;
+
+          ctx.globalAlpha = a;
+          ctx.fillStyle = 'rgb(' + s.r + ',' + s.g + ',' + s.b + ')';
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.radius * 0.35, 0, Math.PI * 2);
+          ctx.fill();
+
+          if (s.radius > 1.5) {
+            var g = ctx.createRadialGradient(s.x, s.y, s.radius * 0.05, s.x, s.y, s.radius * 1.6);
+            g.addColorStop(0, 'rgba(' + s.r + ',' + s.g + ',' + s.b + ',' + (a * 0.65).toFixed(3) + ')');
+            g.addColorStop(0.4, 'rgba(' + s.r + ',' + s.g + ',' + s.b + ',' + (a * 0.18).toFixed(3) + ')');
+            g.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.radius * 1.6, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          if (s.radius > 2.8 && a > 0.6) {
+            ctx.strokeStyle = 'rgba(' + s.r + ',' + s.g + ',' + s.b + ',' + (a * 0.25).toFixed(3) + ')';
+            ctx.lineWidth = 0.4;
+            var L = s.radius * 2.6;
+            ctx.beginPath(); ctx.moveTo(s.x - L, s.y); ctx.lineTo(s.x + L, s.y); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(s.x, s.y - L); ctx.lineTo(s.x, s.y + L); ctx.stroke();
+          }
+        }
+
+        function drawConLines(a) {
+          for (var c = 0; c < constellations.length; c++) {
+            var con = constellations[c];
+            ctx.strokeStyle = 'rgba(160,220,255,' + (a * 0.45).toFixed(3) + ')';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (var i = 0; i < con.ln.length; i++) {
+              var f = con.ln[i][0], t = con.ln[i][1];
+              ctx.moveTo(con.pts[f].x, con.pts[f].y);
+              ctx.lineTo(con.pts[t].x, con.pts[t].y);
+            }
+            ctx.stroke();
+            ctx.strokeStyle = 'rgba(200,240,255,' + a.toFixed(3) + ')';
+            ctx.lineWidth = 0.9;
+            ctx.beginPath();
+            for (var i2 = 0; i2 < con.ln.length; i2++) {
+              var f2 = con.ln[i2][0], t2 = con.ln[i2][1];
+              ctx.moveTo(con.pts[f2].x, con.pts[f2].y);
+              ctx.lineTo(con.pts[t2].x, con.pts[t2].y);
+            }
+            ctx.stroke();
+          }
+        }
+
+        function animate(ts) {
+          var t = ts * 0.001;
+          ctx.clearRect(0, 0, W, H);
+          drawConLines(0.55 + 0.12 * Math.sin(t * 0.23));
+          for (var i = 0; i < stars.length; i++) drawStar(stars[i], t);
+          animId = requestAnimationFrame(animate);
+        }
+
+        function start() {
+          resize();
+          makeStars();
+          makeCons();
+          if (animId) cancelAnimationFrame(animId);
+          animId = requestAnimationFrame(animate);
+        }
+
+        start();
+        var rt;
+        window.addEventListener('resize', function() {
+          clearTimeout(rt);
+          rt = setTimeout(start, 250);
+        });
+
+        var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+        function onMQ(e) {
+          if (e.matches) {
+            cancelAnimationFrame(animId);
+            ctx.clearRect(0, 0, W, H);
+            drawConLines(0.6);
+            for (var i = 0; i < stars.length; i++) drawStar(stars[i], 2.5);
+          } else {
+            animId = requestAnimationFrame(animate);
+          }
+        }
+        if (mq.matches) onMQ(mq);
+        mq.addEventListener('change', onMQ);
+      })();
+    </script>
+    <script is:inline>
+      (() => {
+        // --- Reading progress ---
+        const bar = document.getElementById('reading-progress');
+        const updateProgress = () => {
+          if (!bar) return;
+          const h = document.documentElement;
+          const pct = h.scrollHeight > h.clientHeight
+            ? (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100
+            : 0;
+          bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+        };
+        window.addEventListener('scroll', updateProgress, { passive: true });
+        updateProgress();
+
+        // --- Back to top ---
+        const btn = document.getElementById('back-to-top');
+        if (btn) {
+          const toggleBtn = () => btn.classList.toggle('visible', window.scrollY > 400);
+          window.addEventListener('scroll', toggleBtn, { passive: true });
+          toggleBtn();
+          btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        }
+
+        // --- Code copy buttons ---
+        document.querySelectorAll('.article-body pre').forEach(pre => {
+          const wrap = document.createElement('div');
+          wrap.className = 'code-block-wrapper';
+          pre.replaceWith(wrap);
+          wrap.appendChild(pre);
+          const copyBtn = document.createElement('button');
+          copyBtn.className = 'copy-button';
+          copyBtn.textContent = '复制';
+          copyBtn.addEventListener('click', async () => {
+            const code = pre.querySelector('code')?.textContent ?? pre.textContent ?? '';
+            try {
+              await navigator.clipboard.writeText(code);
+              copyBtn.textContent = '已复制';
+              copyBtn.classList.add('copied');
+              setTimeout(() => { copyBtn.textContent = '复制'; copyBtn.classList.remove('copied'); }, 2000);
+            } catch {
+              copyBtn.textContent = '失败';
+              setTimeout(() => { copyBtn.textContent = '复制'; }, 2000);
+            }
+          });
+          wrap.appendChild(copyBtn);
+        });
+
+        // --- TOC + heading anchors + reading time ---
+        const articleBody = document.querySelector('.article-body');
+        const tocList = document.getElementById('toc-list');
+        if (articleBody) {
+          const chars = (articleBody.textContent ?? '').replace(/\s/g, '').length;
+          const readingTime = `约 ${Math.max(1, Math.ceil(chars / 300))} 分钟阅读`;
+          document.querySelectorAll('.reading-time').forEach(el => { el.textContent = readingTime; });
+
+          const headings = articleBody.querySelectorAll('h2, h3');
+          if (tocList && headings.length > 0) {
+            const observer = new IntersectionObserver(entries => {
+              entries.forEach(e => {
+                const link = tocList.querySelector(`a[href="#${e.target.id}"]`);
+                if (link) link.classList.toggle('active', e.isIntersecting);
+              });
+            }, { rootMargin: '-100px 0px -60% 0px' });
+
+            headings.forEach((h, i) => {
+              if (!h.id) h.id = `section-${i + 1}`;
+              const anchor = document.createElement('a');
+              anchor.href = `#${h.id}`;
+              anchor.className = 'heading-anchor';
+              anchor.textContent = '#';
+              anchor.setAttribute('aria-hidden', 'true');
+              h.prepend(anchor);
+
+              const li = document.createElement('li');
+              const a = document.createElement('a');
+              a.href = `#${h.id}`;
+              a.textContent = h.textContent ?? '';
+              if (h.tagName === 'H3') a.classList.add('toc-h3');
+              li.appendChild(a);
+              tocList.appendChild(li);
+              observer.observe(h);
+            });
+          }
+        }
+
+        // --- Copy article link ---
+        const shareBtn = document.getElementById('toc-share-btn');
+        if (shareBtn) {
+          shareBtn.addEventListener('click', async () => {
+            try {
+              await navigator.clipboard.writeText(window.location.href);
+              shareBtn.classList.add('copied');
+              const label = shareBtn.querySelector('.share-label');
+              if (label) label.textContent = '已复制';
+              setTimeout(() => {
+                shareBtn.classList.remove('copied');
+                if (label) label.textContent = '复制链接';
+              }, 2000);
+            } catch {
+              // fallback silently
+            }
+          });
+        }
       })();
     </script>
   </body>

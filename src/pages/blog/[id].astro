@@ -21,12 +21,14 @@ const pubDate = post.data.pubDate.toLocaleDateString('zh-CN', {
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description} canonicalPath={`/blog/${post.id}/`}>
-  <article class="article article-panel">
-    <header class="article-header">
+  <div class="article-with-toc">
+    <article class="article article-panel">
+      <header class="article-header">
       <div class="meta">
         <time datetime={post.data.pubDate.toISOString()}>{pubDate}</time>
         <a href={`/categories/${encodeURIComponent(post.data.category)}/`}>{post.data.category}</a>
         {post.data.updatedDate && <span>更新于 {post.data.updatedDate.toLocaleDateString('zh-CN')}</span>}
+        <span class="reading-time" id="reading-time"></span>
       </div>
       <h1>{post.data.title}</h1>
       <p>{post.data.description}</p>
@@ -37,5 +39,45 @@ const pubDate = post.data.pubDate.toLocaleDateString('zh-CN', {
     <div class="article-body">
       <Content />
     </div>
-  </article>
+    </article>
+    <aside class="toc-panel" id="toc-panel">
+      <div class="toc-section">
+        <div class="toc-meta-item">
+          <span class="toc-meta-label">分类</span>
+          <a href={`/categories/${encodeURIComponent(post.data.category)}/`}>{post.data.category}</a>
+        </div>
+        <div class="toc-meta-item">
+          <span class="toc-meta-label">日期</span>
+          <time datetime={post.data.pubDate.toISOString()}>{pubDate}</time>
+        </div>
+        <div class="toc-meta-item">
+          <span class="toc-meta-label">阅读</span>
+          <span class="reading-time"></span>
+        </div>
+      </div>
+
+      <hr class="toc-divider" />
+
+      <h3 class="toc-heading">目录</h3>
+      <nav class="toc-list" id="toc-list"></nav>
+
+      {
+        post.data.tags.length > 0 && (
+          <>
+            <hr class="toc-divider" />
+            <h3 class="toc-heading">标签</h3>
+            <div class="toc-tags">
+              {post.data.tags.map((tag) => <a class="tag" href={`/tags/${encodeURIComponent(tag)}/`}>{tag}</a>)}
+            </div>
+          </>
+        )
+      }
+
+      <hr class="toc-divider" />
+      <button class="toc-share-btn" id="toc-share-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <span class="share-label">复制链接</span>
+      </button>
+    </aside>
+  </div>
 </BaseLayout>

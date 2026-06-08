@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PostCard from '../components/PostCard.astro';
+import HomeSidebar from '../components/HomeSidebar.astro';
 import SiteIcon from '../components/SiteIcon.astro';
 
 const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
@@ -10,9 +11,23 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
 
 const categories = new Set(posts.map((post) => post.data.category));
 const tags = new Set(posts.flatMap((post) => post.data.tags));
+
+const tagCounts = posts.reduce(
+  (map, post) => {
+    post.data.tags.forEach((tag) => map.set(tag, (map.get(tag) ?? 0) + 1));
+    return map;
+  },
+  new Map<string, number>(),
+);
+const popularTags: Array<[string, number]> = [...tagCounts.entries()]
+  .sort(([, a], [, b]) => b - a)
+  .slice(0, 10);
 ---
 
 <BaseLayout>
+  <div class="home-with-sidebar">
+    <div class="home-main">
+
   <section class="container hero-panel">
     <div class="hero-copy">
       <div class="hero-kicker">
@@ -76,4 +91,8 @@ const tags = new Set(posts.flatMap((post) => post.data.tags));
           )
     }
   </section>
+
+    </div>
+    <HomeSidebar popularTags={popularTags} />
+  </div>
 </BaseLayout>
