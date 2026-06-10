@@ -5,7 +5,8 @@ import PostCard from '../../components/PostCard.astro';
 import SiteIcon from '../../components/SiteIcon.astro';
 
 export async function getStaticPaths() {
-  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  const showDrafts = import.meta.env.DEV;
+  const posts = await getCollection('blog', ({ data }) => showDrafts || !data.draft);
   const tags = new Set(posts.flatMap((post) => post.data.tags));
 
   return [...tags].map((tag) => ({

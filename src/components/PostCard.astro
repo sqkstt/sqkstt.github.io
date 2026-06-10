@@ -24,7 +24,4 @@ const date = post.data.pubDate.toLocaleDateString('zh-CN', {
   </div>
   <h2>{post.data.title}</h2>
   <p>{post.data.description}</p>
-  <div class="tags" aria-label="文章标签">
-    {post.data.tags.map((tag) => <a class="tag" href={`/tags/${encodeURIComponent(tag)}/`}>{tag}</a>)}
-  </div>
 </a>

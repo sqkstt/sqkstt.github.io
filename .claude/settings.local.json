@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(grep -o '=>\\\\|`.*`' dist/index.html)",
+      "Bash(awk '/starfield-canvas/,/script/' dist/index.html)",
+      "Bash(grep -o '=>\\\\|let \\\\|const \\\\|`')",
+      "Bash(npm install *)",
+      "Bash(node -e ' *)",
+      "Bash(timeout 10 node tools/editor/server.mjs)",
+      "Bash(timeout 8 node tools/editor/server.mjs)"
+    ]
+  }
+}

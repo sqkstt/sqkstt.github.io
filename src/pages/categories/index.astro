@@ -3,7 +3,8 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteIcon from '../../components/SiteIcon.astro';
 
-const posts = await getCollection('blog', ({ data }) => !data.draft);
+const showDrafts = import.meta.env.DEV;
+const posts = await getCollection('blog', ({ data }) => showDrafts || !data.draft);
 const categoryCounts = posts.reduce<Map<string, number>>((counts, post) => {
   counts.set(post.data.category, (counts.get(post.data.category) ?? 0) + 1);
   return counts;

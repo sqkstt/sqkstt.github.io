@@ -1,9 +1,9 @@
 ---
 interface Props {
-  popularTags: Array<[string, number]>;
+  categories: string[];
 }
 
-const { popularTags } = Astro.props;
+const { categories } = Astro.props;
 ---
 
 <aside class="home-sidebar">
@@ -18,7 +18,7 @@ const { popularTags } = Astro.props;
       />
       <div class="home-author-text">
         <strong>sqkstt777</strong>
-        <p>记录踩坑、修复和工程灵感，整理成可回看的技术笔记。</p>
+        <p>游戏引擎开发学习者。</p>
       </div>
     </div>
     <a href="/about/" class="home-side-link">了解更多 &rarr;</a>
@@ -26,22 +26,22 @@ const { popularTags } = Astro.props;
 
   <hr class="toc-divider" />
 
-  <!-- Popular tags -->
-  <h3 class="toc-heading">热门标签</h3>
+  <!-- Categories -->
+  <h3 class="toc-heading">分类</h3>
   {
-    popularTags.length > 0 ? (
+    categories.length > 0 ? (
       <div class="toc-tags">
-        {popularTags.map(([tag, count]) => (
-          <a class="tag" href={`/tags/${encodeURIComponent(tag)}/`}>{tag} &middot; {count}</a>
+        {categories.map((category) => (
+          <a class="tag" href={`/categories/${encodeURIComponent(category)}/`}>{category}</a>
         ))}
       </div>
     ) : (
       <p style="color:var(--muted);font-size:12px;margin:4px 0 0;">
-        发布文章后，热门标签会自动出现。
+        发布文章后，分类会自动出现。
       </p>
     )
   }
-  <a href="/tags/" class="home-side-link" style="margin-top:8px;">查看全部标签 &rarr;</a>
+  <a href="/categories/" class="home-side-link" style="margin-top:8px;">浏览全部分类 &rarr;</a>
 
   <hr class="toc-divider" />
 
@@ -56,4 +56,15 @@ const { popularTags } = Astro.props;
     </div>
   </div>
   <a href="/rss.xml" class="home-side-link home-side-primary">订阅 RSS &rarr;</a>
+
+  <hr class="toc-divider" />
+
+  <!-- Social platform links -->
+  <h3 class="toc-heading">社交平台</h3>
+  <div class="social-badges">
+    <a href="https://steamcommunity.com/id/yourprofile" target="_blank" rel="noopener noreferrer" class="social-badge">Steam</a>
+    <a href="https://space.bilibili.com/yourid" target="_blank" rel="noopener noreferrer" class="social-badge">Bilibili</a>
+    <a href="https://bgm.tv/user/yourname" target="_blank" rel="noopener noreferrer" class="social-badge">Bangumi</a>
+    <a href="https://leetcode.cn/u/yourname" target="_blank" rel="noopener noreferrer" class="social-badge">LeetCode</a>
+  </div>
 </aside>

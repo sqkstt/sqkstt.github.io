@@ -5,23 +5,13 @@ import PostCard from '../components/PostCard.astro';
 import HomeSidebar from '../components/HomeSidebar.astro';
 import SiteIcon from '../components/SiteIcon.astro';
 
-const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+const showDrafts = import.meta.env.DEV;
+const posts = (await getCollection('blog', ({ data }) => showDrafts || !data.draft)).sort(
   (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
 
 const categories = new Set(posts.map((post) => post.data.category));
 const tags = new Set(posts.flatMap((post) => post.data.tags));
-
-const tagCounts = posts.reduce(
-  (map, post) => {
-    post.data.tags.forEach((tag) => map.set(tag, (map.get(tag) ?? 0) + 1));
-    return map;
-  },
-  new Map<string, number>(),
-);
-const popularTags: Array<[string, number]> = [...tagCounts.entries()]
-  .sort(([, a], [, b]) => b - a)
-  .slice(0, 10);
 ---
 
 <BaseLayout>
@@ -34,9 +24,9 @@ const popularTags: Array<[string, number]> = [...tagCounts.entries()]
         <span class="spark-dot"></span>
         本地写作 · 自动发布 · 长期维护
       </div>
-      <h1>把踩坑、修复和工程灵感整理成可回看的技术笔记</h1>
+      <h1>写代码、看动漫、打游戏——一个二次元码农的日常</h1>
       <p>
-        这里记录网络排障、开发工具、系统实践和一些日常折腾。风格偏轻松，但内容尽量写清楚、可复现、方便以后再查。
+        这里记录技术学习、项目踩坑和生活碎碎念。游戏引擎开发中，业余时间沉迷 ACG，风格偏轻松，但也尽量写得清楚可复现。
       </p>
       <div class="hero-actions">
         <a class="primary-link" href="/categories/">浏览分类</a>
@@ -73,7 +63,7 @@ const popularTags: Array<[string, number]> = [...tagCounts.entries()]
       <h2>最新文章</h2>
       <p>从最近一次问题复盘开始，慢慢把知识库补齐。</p>
     </div>
-    <a href="/tags/">查看标签</a>
+    <a href="/categories/">浏览分类</a>
   </section>
 
   <section class="container post-list" aria-label="文章列表">
@@ -93,6 +83,6 @@ const popularTags: Array<[string, number]> = [...tagCounts.entries()]
   </section>
 
     </div>
-    <HomeSidebar popularTags={popularTags} />
+    <HomeSidebar categories={[...categories].sort((a, b) => a.localeCompare(b, 'zh-CN'))} />
   </div>
 </BaseLayout>

@@ -15,7 +15,14 @@
   "dependencies": {
     "@astrojs/rss": "^4.0.18",
     "@astrojs/sitemap": "^3.7.3",
-    "astro": "^6.4.2"
+    "@tiptap/extension-code-block-lowlight": "^3.26.0",
+    "@tiptap/extension-placeholder": "^3.26.0",
+    "@tiptap/pm": "^3.26.0",
+    "@tiptap/react": "^3.26.0",
+    "@tiptap/starter-kit": "^3.26.0",
+    "astro": "^6.4.2",
+    "highlight.js": "^11.11.1",
+    "marked": "^18.0.5"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.4",
