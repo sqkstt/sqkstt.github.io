@@ -81,6 +81,7 @@ body {
     radial-gradient(ellipse 320px 220px at 72% 88%, rgba(167, 139, 250, 0.07), transparent);
   animation: nebula-drift 38s ease-in-out infinite;
   pointer-events: none;
+  will-change: transform, opacity;
 }
 
 @keyframes nebula-drift {
@@ -263,6 +264,7 @@ body {
   opacity: 0;
   transform: rotate(var(--meteor-angle, -32deg));
   animation: meteor-flight var(--meteor-duration, 5.8s) linear infinite;
+	will-change: transform, opacity;
 }
 
 .meteor-two {
@@ -523,12 +525,14 @@ a:hover {
   right: 10px;
   bottom: 6px;
   z-index: 20;
-  width: clamp(140px, 12vw, 186px);
+  width: clamp(132px, 10vw, 168px);
+  aspect-ratio: 89 / 117;
   cursor: grab;
   pointer-events: auto;
   touch-action: none;
   user-select: none;
   transform-origin: 50% 100%;
+  will-change: transform, left, top;
 }
 
 .corner-pet.dragging {
@@ -537,8 +541,11 @@ a:hover {
 
 .corner-pet-inner {
   position: relative;
+  width: 100%;
+  height: 100%;
   transform-origin: 50% 100%;
   animation: pet-float 4.8s ease-in-out infinite;
+  will-change: transform;
 }
 
 .corner-pet-inner::before {
@@ -569,17 +576,49 @@ a:hover {
   animation: pet-shine 5.6s ease-in-out infinite;
 }
 
-.corner-pet img {
+.corner-pet-sprite {
   position: relative;
   z-index: 1;
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
+  background-image: url("/assets/codex-pet-mascot-hd.webp");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
   image-rendering: auto;
   filter:
     drop-shadow(0 20px 22px rgba(0, 0, 0, 0.48))
-    drop-shadow(0 0 18px rgba(37, 217, 255, 0.18))
-    drop-shadow(0 0 10px rgba(255, 94, 168, 0.16));
+    drop-shadow(0 0 18px rgba(37, 217, 255, 0.18));
+  will-change: background-position, transform;
+}
+
+.corner-pet.dragging .corner-pet-inner {
+  animation: none;
+}
+
+.corner-pet[data-pet-state="run-right"] .corner-pet-inner {
+  animation: pet-drag-right 520ms ease-in-out infinite;
+}
+
+.corner-pet[data-pet-state="run-left"] .corner-pet-inner {
+  animation: pet-drag-left 520ms ease-in-out infinite;
+}
+
+.corner-pet[data-pet-state="run-right"] .corner-pet-sprite,
+.corner-pet[data-pet-state="run-left"] .corner-pet-sprite {
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-size: 600% 100%;
+  animation: pet-run-frames 520ms steps(5, end) infinite;
+}
+
+.corner-pet[data-pet-state="run-right"] .corner-pet-sprite {
+  background-image: url("/assets/codex-pet-drag-right.webp");
+}
+
+.corner-pet[data-pet-state="run-left"] .corner-pet-sprite {
+  background-image: url("/assets/codex-pet-drag-left.webp");
 }
 
 @keyframes pet-float {
@@ -592,6 +631,32 @@ a:hover {
   }
   70% {
     transform: translate3d(0, -5px, 0) rotate(-0.6deg);
+  }
+}
+
+@keyframes pet-run-frames {
+  100% {
+    background-position: 100% 0;
+  }
+}
+
+@keyframes pet-drag-right {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(2deg);
+  }
+  50% {
+    transform: translate3d(3px, -4px, 0) rotate(5deg);
+  }
+}
+
+@keyframes pet-drag-left {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-2deg);
+  }
+  50% {
+    transform: translate3d(-3px, -4px, 0) rotate(-5deg);
   }
 }
 
@@ -635,6 +700,7 @@ a:hover {
   border-bottom: 1px solid var(--border);
   background: rgba(3, 7, 18, 0.78);
   backdrop-filter: blur(18px);
+  will-change: transform;
 }
 
 .nav {
@@ -1744,6 +1810,7 @@ main {
   .corner-pet-inner,
   .corner-pet-inner::before,
   .corner-pet-inner::after,
+  .corner-pet-sprite,
   .starfield-sm,
   .starfield-md,
   .starfield-lg,

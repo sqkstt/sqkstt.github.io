@@ -39,20 +39,14 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
       <canvas class="starfield-canvas" id="starfield-canvas" aria-hidden="true"></canvas>
       <span class="meteor meteor-one"></span>
       <span class="meteor meteor-two"></span>
-      <span class="meteor meteor-three"></span>
+      <span class="meteor meteor-three meteor-violet"></span>
       <span class="meteor meteor-four"></span>
-      <span class="meteor meteor-five"></span>
+      <span class="meteor meteor-five meteor-pink"></span>
       <span class="meteor meteor-six"></span>
-      <span class="meteor meteor-seven"></span>
-      <span class="meteor meteor-eight"></span>
+      <span class="meteor meteor-seven meteor-short"></span>
+      <span class="meteor meteor-eight meteor-long"></span>
       <span class="meteor meteor-nine"></span>
       <span class="meteor meteor-ten meteor-pink"></span>
-      <span class="meteor meteor-eleven meteor-violet"></span>
-      <span class="meteor meteor-twelve meteor-short"></span>
-      <span class="meteor meteor-thirteen meteor-long"></span>
-      <span class="meteor meteor-fourteen meteor-pink"></span>
-      <span class="meteor meteor-fifteen meteor-violet"></span>
-      <span class="meteor meteor-sixteen meteor-short"></span>
     </div>
     <div class="site-shell">
       <header class="site-header">
@@ -81,9 +75,9 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
       </footer>
     </div>
     <button class="back-to-top" id="back-to-top" aria-label="返回顶部">&uarr;</button>
-    <div class="corner-pet" id="corner-pet" aria-hidden="true">
+    <div class="corner-pet" id="corner-pet" data-pet-state="idle" aria-hidden="true">
       <div class="corner-pet-inner">
-        <img src="/assets/codex-pet-mascot.png" alt="" draggable="false" />
+        <span class="corner-pet-sprite"></span>
       </div>
     </div>
     <script is:inline>
@@ -115,14 +109,29 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
         }
 
         let drag = null;
+        let idleTimer = 0;
+        let lastMove = { x: 0, y: 0, t: 0 };
+
+        const setPetState = (state) => {
+          if (pet.dataset.petState !== state) pet.dataset.petState = state;
+        };
+
+        const queueIdle = () => {
+          window.clearTimeout(idleTimer);
+          idleTimer = window.setTimeout(() => setPetState('idle'), 110);
+        };
+
         pet.addEventListener('pointerdown', (event) => {
           if (event.button !== undefined && event.button !== 0) return;
           const rect = pet.getBoundingClientRect();
+          const now = performance.now();
           drag = {
             offsetX: event.clientX - rect.left,
             offsetY: event.clientY - rect.top,
           };
+          lastMove = { x: event.clientX, y: event.clientY, t: now };
           pet.classList.add('dragging');
+          setPetState('idle');
           pet.setPointerCapture?.(event.pointerId);
           event.preventDefault();
         });
@@ -130,12 +139,26 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
         pet.addEventListener('pointermove', (event) => {
           if (!drag) return;
           place(event.clientX - drag.offsetX, event.clientY - drag.offsetY);
+          const now = performance.now();
+          const dx = event.clientX - lastMove.x;
+          const dy = event.clientY - lastMove.y;
+          const elapsed = Math.max(now - lastMove.t, 16);
+          const speed = Math.hypot(dx, dy) / elapsed;
+
+          if (Math.abs(dx) > 1.8 || speed > 0.08) {
+            setPetState(dx < 0 ? 'run-left' : 'run-right');
+          }
+
+          lastMove = { x: event.clientX, y: event.clientY, t: now };
+          queueIdle();
         });
 
         const endDrag = (event) => {
           if (!drag) return;
           drag = null;
+          window.clearTimeout(idleTimer);
           pet.classList.remove('dragging');
+          setPetState('idle');
           pet.releasePointerCapture?.(event.pointerId);
           const rect = pet.getBoundingClientRect();
           localStorage.setItem(storageKey, JSON.stringify({ x: rect.left, y: rect.top }));
@@ -158,20 +181,20 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
         var constellations = [];
         var animId = null;
         var W = 0, H = 0;
+        var lastFrame = 0;
+        var FRAME_MS = 1000 / 30;
 
         function resize() {
-          var dpr = Math.min(window.devicePixelRatio || 1, 2);
           W = window.innerWidth;
           H = window.innerHeight;
-          canvas.width = W * dpr;
-          canvas.height = H * dpr;
+          canvas.width = W;
+          canvas.height = H;
           canvas.style.width = W + 'px';
           canvas.style.height = H + 'px';
-          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
 
         function makeStars() {
-          var count = Math.floor((W * H) / 500);
+          var count = Math.floor((W * H) / 1000);
           stars = [];
           var i, s, radius, r, g, b;
           for (i = 0; i < count; i++) {
@@ -191,7 +214,7 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
             g += Math.floor(Math.random() * 30);
             b += Math.floor(Math.random() * 20);
 
-            stars.push({
+            var star = {
               x: Math.random() * W,
               y: Math.random() * H,
               radius: radius,
@@ -201,7 +224,28 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
               ph: Math.random() * Math.PI * 2,
               amp: 0.05 + Math.random() * 0.5,
               stl: Math.floor(Math.random() * 3),
-            });
+            };
+
+            // Pre-render glow texture for medium+ stars
+            if (radius > 1.5) {
+              var size = Math.ceil(radius * 3.2);
+              var off = document.createElement('canvas');
+              off.width = size;
+              off.height = size;
+              var octx = off.getContext('2d');
+              var cx = size / 2, cy = size / 2;
+              var g = octx.createRadialGradient(cx, cy, radius * 0.05, cx, cy, radius * 1.6);
+              g.addColorStop(0, 'rgba(' + r + ',' + g + ',' + b + ',0.65)');
+              g.addColorStop(0.4, 'rgba(' + r + ',' + g + ',' + b + ',0.18)');
+              g.addColorStop(1, 'rgba(0,0,0,0)');
+              octx.fillStyle = g;
+              octx.beginPath();
+              octx.arc(cx, cy, radius * 1.6, 0, Math.PI * 2);
+              octx.fill();
+              star._glow = off;
+            }
+
+            stars.push(star);
           }
         }
 
@@ -230,16 +274,34 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
             var pts = [];
             for (var i = 0; i < p.pts.length; i++) {
               pts.push({ x: px + p.pts[i][0] * sc, y: py + p.pts[i][1] * sc });
-              stars.push({
+              var cr = 2.5 + Math.random() * 3.5;
+              var star = {
                 x: pts[i].x, y: pts[i].y,
-                radius: 2.5 + Math.random() * 3.5,
+                radius: cr,
                 r: 210, g: 228, b: 248,
                 baseA: 0.8 + Math.random() * 0.2,
                 spd: 0.1 + Math.random() * 0.3,
                 ph: Math.random() * Math.PI * 2,
                 amp: 0.02 + Math.random() * 0.1,
                 stl: 0, conId: c,
-              });
+              };
+              // Pre-render glow for constellation stars
+              var size = Math.ceil(cr * 3.2);
+              var off = document.createElement('canvas');
+              off.width = size;
+              off.height = size;
+              var octx = off.getContext('2d');
+              var cx = size / 2, cy = size / 2;
+              var g = octx.createRadialGradient(cx, cy, cr * 0.05, cx, cy, cr * 1.6);
+              g.addColorStop(0, 'rgba(210,228,248,0.65)');
+              g.addColorStop(0.4, 'rgba(210,228,248,0.18)');
+              g.addColorStop(1, 'rgba(0,0,0,0)');
+              octx.fillStyle = g;
+              octx.beginPath();
+              octx.arc(cx, cy, cr * 1.6, 0, Math.PI * 2);
+              octx.fill();
+              star._glow = off;
+              stars.push(star);
             }
             constellations.push({ pts: pts, ln: p.ln });
           }
@@ -253,7 +315,7 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
           else                   a = a * (1 - s.amp + s.amp * Math.pow(Math.abs(Math.sin(t * s.spd * 1.6 + s.ph)), 4));
           if (a < 0) a = 0; if (a > 1) a = 1;
           if (s.conId !== undefined) { a = a * 1.6; if (a > 1) a = 1; }
-          if (a < 0.025) return;
+          if (a < 0.04) return;
 
           ctx.globalAlpha = a;
           ctx.fillStyle = 'rgb(' + s.r + ',' + s.g + ',' + s.b + ')';
@@ -261,15 +323,9 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
           ctx.arc(s.x, s.y, s.radius * 0.35, 0, Math.PI * 2);
           ctx.fill();
 
-          if (s.radius > 1.5) {
-            var g = ctx.createRadialGradient(s.x, s.y, s.radius * 0.05, s.x, s.y, s.radius * 1.6);
-            g.addColorStop(0, 'rgba(' + s.r + ',' + s.g + ',' + s.b + ',' + (a * 0.65).toFixed(3) + ')');
-            g.addColorStop(0.4, 'rgba(' + s.r + ',' + s.g + ',' + s.b + ',' + (a * 0.18).toFixed(3) + ')');
-            g.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = g;
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, s.radius * 1.6, 0, Math.PI * 2);
-            ctx.fill();
+          // Blit pre-rendered glow (avoids createRadialGradient per frame)
+          if (s._glow) {
+            ctx.drawImage(s._glow, s.x - s._glow.width / 2, s.y - s._glow.height / 2);
           }
 
           if (s.radius > 2.8 && a > 0.6) {
@@ -285,7 +341,7 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
           for (var c = 0; c < constellations.length; c++) {
             var con = constellations[c];
             ctx.strokeStyle = 'rgba(160,220,255,' + (a * 0.45).toFixed(3) + ')';
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 2.5;
             ctx.beginPath();
             for (var i = 0; i < con.ln.length; i++) {
               var f = con.ln[i][0], t = con.ln[i][1];
@@ -306,6 +362,12 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
         }
 
         function animate(ts) {
+          if (ts - lastFrame < FRAME_MS) {
+            animId = requestAnimationFrame(animate);
+            return;
+          }
+          lastFrame = ts;
+
           var t = ts * 0.001;
           ctx.clearRect(0, 0, W, H);
           drawConLines(0.55 + 0.12 * Math.sin(t * 0.23));
@@ -318,6 +380,7 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
           makeStars();
           makeCons();
           if (animId) cancelAnimationFrame(animId);
+          lastFrame = 0;
           animId = requestAnimationFrame(animate);
         }
 
@@ -336,6 +399,7 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
             drawConLines(0.6);
             for (var i = 0; i < stars.length; i++) drawStar(stars[i], 2.5);
           } else {
+            lastFrame = 0;
             animId = requestAnimationFrame(animate);
           }
         }
@@ -343,6 +407,7 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
         mq.addEventListener('change', onMQ);
       })();
     </script>
+
     <script is:inline>
       (() => {
         // --- Reading progress ---
