@@ -1,20 +1,21 @@
 :root {
-  color-scheme: dark;
-  --bg: #03050c;
-  --panel: rgba(10, 16, 31, 0.88);
-  --panel-soft: rgba(15, 25, 46, 0.78);
-  --panel-strong: rgba(20, 32, 58, 0.94);
-  --line: rgba(125, 211, 252, 0.22);
-  --line-strong: rgba(144, 247, 255, 0.42);
-  --text: #f4fbff;
-  --muted: #a8b7c9;
-  --accent: #25d9ff;
-  --accent-strong: #90f7ff;
-  --accent-hot: #ff5ea8;
-  --accent-violet: #a78bfa;
-  --draft: #ffb86b;
-  --published: #7dffbf;
-  --shadow: 0 22px 70px rgba(0, 0, 0, 0.42);
+  color-scheme: light;
+  --bg: #f6fbff;
+  --panel: rgba(255, 255, 255, 0.86);
+  --panel-soft: rgba(255, 255, 255, 0.7);
+  --panel-strong: rgba(255, 255, 255, 0.96);
+  --line: rgba(25, 118, 188, 0.18);
+  --line-strong: rgba(25, 118, 188, 0.38);
+  --text: #17202a;
+  --muted: #627285;
+  --accent: #1976bc;
+  --accent-strong: #0f5f9f;
+  --accent-hot: #bf4f7d;
+  --accent-violet: #6b62bf;
+  --accent-warm: #a96f09;
+  --draft: #a96f09;
+  --published: #1f8a5b;
+  --shadow: 0 22px 58px rgba(59, 99, 129, 0.16);
   font-family:
     Inter, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui,
     -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -36,9 +37,9 @@ body {
   min-height: 100vh;
   overflow: hidden;
   background:
-    linear-gradient(115deg, rgba(37, 217, 255, 0.12), transparent 34%),
-    linear-gradient(245deg, rgba(255, 94, 168, 0.1), transparent 42%),
-    linear-gradient(180deg, #02030a 0, #07101f 46%, #03050c 100%);
+    linear-gradient(135deg, rgba(142, 209, 255, 0.28), transparent 34%),
+    linear-gradient(245deg, rgba(255, 234, 177, 0.38), transparent 42%),
+    linear-gradient(180deg, #eef8ff 0, #ffffff 48%, #f3f9ff 100%);
 }
 
 button,
@@ -73,11 +74,11 @@ textarea::placeholder {
   pointer-events: none;
   overflow: hidden;
   background:
-    radial-gradient(circle at 18% 20%, rgba(37, 217, 255, 0.16) 0 1px, transparent 2px),
-    radial-gradient(circle at 72% 34%, rgba(255, 255, 255, 0.18) 0 1px, transparent 2px),
-    radial-gradient(circle at 42% 76%, rgba(167, 139, 250, 0.16) 0 1px, transparent 2px),
-    linear-gradient(90deg, rgba(125, 211, 252, 0.045) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(125, 211, 252, 0.035) 1px, transparent 1px);
+    radial-gradient(circle at 18% 20%, rgba(25, 118, 188, 0.08) 0 1px, transparent 2px),
+    radial-gradient(circle at 72% 34%, rgba(191, 137, 25, 0.12) 0 1px, transparent 2px),
+    radial-gradient(circle at 42% 76%, rgba(107, 98, 191, 0.08) 0 1px, transparent 2px),
+    linear-gradient(90deg, rgba(25, 118, 188, 0.035) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(25, 118, 188, 0.028) 1px, transparent 1px);
   background-size: 220px 220px, 280px 280px, 320px 320px, 54px 54px, 54px 54px;
 }
 
@@ -86,8 +87,8 @@ textarea::placeholder {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(3, 5, 12, 0.08), rgba(3, 5, 12, 0.76)),
-    repeating-linear-gradient(90deg, transparent 0 88px, rgba(37, 217, 255, 0.035) 89px 90px);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.74)),
+    repeating-linear-gradient(90deg, transparent 0 88px, rgba(25, 118, 188, 0.026) 89px 90px);
 }
 
 .meteor {
@@ -102,6 +103,7 @@ textarea::placeholder {
     linear-gradient(90deg, transparent, var(--meteor-tail, rgba(144, 247, 255, 0.18)), var(--meteor-core, rgba(144, 247, 255, 0.95)), var(--meteor-tip, rgba(255, 94, 168, 0.92)));
   filter: drop-shadow(0 0 8px var(--meteor-glow, rgba(37, 217, 255, 0.9))) drop-shadow(0 0 18px rgba(255, 94, 168, 0.25));
   opacity: 0;
+  display: none;
   transform: rotate(var(--meteor-angle, -32deg));
   animation: meteor-flight var(--meteor-duration, 5.8s) linear infinite;
 }
@@ -1760,4 +1762,203 @@ textarea::placeholder {
 
 .wysiwyg-wrapper:focus-within {
   box-shadow: inset 0 0 0 2px rgba(37, 217, 255, 0.1);
+}
+
+/* ---------- Light editor refresh ---------- */
+
+.topbar {
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 12px 34px rgba(59, 99, 129, 0.08);
+}
+
+.primary-button {
+  border-color: rgba(191, 137, 25, 0.42);
+  background:
+    linear-gradient(135deg, rgba(255, 246, 211, 0.96), rgba(255, 255, 255, 0.84) 54%, rgba(218, 240, 255, 0.9));
+  color: #704a07;
+  box-shadow: 0 12px 24px rgba(191, 137, 25, 0.14);
+}
+
+.ghost-button,
+.icon-button,
+.toolbar-button {
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--accent-strong);
+}
+
+.ghost-button:hover,
+.icon-button:hover,
+.toolbar-button:hover,
+.segmented button.active {
+  background: rgba(25, 118, 188, 0.09);
+}
+
+.sidebar,
+.inspector {
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 18px 0 46px rgba(59, 99, 129, 0.08);
+}
+
+.inspector {
+  box-shadow: -18px 0 46px rgba(59, 99, 129, 0.08);
+}
+
+.search-box,
+.segmented,
+.mode-tabs,
+.editor-tabs {
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.post-row,
+.title-input,
+.summary-input,
+.editor-card,
+.field input,
+.quick-add input,
+.choice-section,
+.selected-tags,
+.switch-row,
+.save-state,
+.empty-panel,
+.commit-section,
+.outline-section {
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.post-row.selected {
+  background:
+    linear-gradient(135deg, rgba(25, 118, 188, 0.1), rgba(255, 255, 255, 0.78));
+  box-shadow: 0 16px 34px rgba(25, 118, 188, 0.14);
+}
+
+.status-pill.draft,
+.draft-notice.is-draft,
+.batch-bar,
+.batch-btn.unpublish {
+  background: rgba(191, 137, 25, 0.1);
+  color: var(--draft);
+}
+
+.status-pill.published,
+.draft-notice.is-public,
+.batch-btn.publish,
+.git-ahead {
+  background: rgba(31, 138, 91, 0.1);
+  color: var(--published);
+}
+
+.git-pill.local,
+.commit-local,
+.chip,
+.selected-tag {
+  background: rgba(25, 118, 188, 0.08);
+  color: var(--accent-strong);
+}
+
+.git-pill.submitted,
+.commit-remote,
+.changelog-hash {
+  background: rgba(107, 98, 191, 0.1);
+  color: var(--accent-violet);
+}
+
+.body-editor,
+.markdown-preview,
+.flow-preview,
+.wysiwyg-wrapper {
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text);
+}
+
+.flow-editor {
+  background: rgba(25, 118, 188, 0.12);
+}
+
+.flow-preview::before {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--accent-strong);
+}
+
+.markdown-preview h1,
+.markdown-preview h2,
+.markdown-preview h3,
+.tiptap-editor h1,
+.tiptap-editor h2,
+.tiptap-editor h3,
+.tiptap-editor h4,
+.tiptap-editor h5,
+.tiptap-editor h6,
+.tiptap-editor strong {
+  color: var(--text);
+}
+
+.markdown-preview em,
+.tiptap-editor em {
+  color: #405367;
+}
+
+.markdown-preview blockquote,
+.tiptap-editor blockquote {
+  background:
+    linear-gradient(90deg, rgba(25, 118, 188, 0.1), rgba(25, 118, 188, 0.025)),
+    rgba(255, 255, 255, 0.72);
+  color: #536476;
+}
+
+.markdown-preview code,
+.tiptap-editor code {
+  background: rgba(25, 118, 188, 0.1);
+  color: #0e5d9d;
+}
+
+.markdown-preview pre,
+.tiptap-editor pre,
+.delete-confirm code {
+  background: #111827;
+  color: #e8f2ff;
+}
+
+.markdown-preview tbody tr:nth-child(odd),
+.tiptap-editor tbody tr:nth-child(odd),
+.git-file-list li {
+  background: rgba(25, 118, 188, 0.045);
+}
+
+.markdown-preview tbody tr:hover,
+.tiptap-editor tbody tr:hover,
+.outline-item:hover,
+.changelog-item:hover {
+  background: rgba(25, 118, 188, 0.08);
+}
+
+.danger-zone {
+  background:
+    linear-gradient(135deg, rgba(191, 79, 125, 0.1), transparent 46%),
+    rgba(255, 255, 255, 0.76);
+  color: var(--muted);
+}
+
+.danger-head,
+.danger-button,
+.delete-confirm code {
+  color: #a73566;
+}
+
+.danger-button,
+.delete-confirm input {
+  background: rgba(191, 79, 125, 0.08);
+}
+
+.tiptap-editor {
+  color: var(--text);
+}
+
+.tiptap-editor p.is-editor-empty:first-child::before {
+  color: rgba(98, 114, 133, 0.62);
+}
+
+.wysiwyg-wrapper:focus-within {
+  box-shadow: inset 0 0 0 2px rgba(25, 118, 188, 0.12);
 }
