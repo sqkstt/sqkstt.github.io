@@ -1,0 +1,1048 @@
+---
+// 开场动画：致敬 Fate/Zero 的 Excalibur（「咖喱棒」）释放场景。
+// 双模式：若 public/assets/excalibur-intro.mp4 存在并可播 → 视频模式；
+// 否则自动回退到纯 CSS 关键帧分镜 + canvas 金色火星。vanilla JS 控制播放/跳过/会话去重。
+// 结束时由金色剑光逐渐暗淡，直接显露底层博客页面。
+// 仅在首页、非 reduced-motion、当前会话未播放过时触发。
+---
+
+<button class="opening-replay" id="opening-replay" type="button" aria-label="重播开场动画" hidden>
+  <span aria-hidden="true">↻</span>
+  <span>重播开场</span>
+</button>
+
+<div class="opening-sequence idle" id="opening-sequence" aria-hidden="true">
+  <canvas class="opening-particles" id="opening-particles" aria-hidden="true"></canvas>
+
+  <!-- 真实视频层：把合法取得的片段放进 public/assets/ 即生效；缺失则自动回退到 CSS 分镜 -->
+  <video
+    class="opening-video"
+    id="opening-video"
+    muted
+    playsinline
+    preload="metadata"
+    aria-hidden="true"
+  >
+    <source src="/assets/excalibur-intro.mp4" type="video/mp4" />
+  </video>
+
+  <div class="opening-sword-reveal" aria-hidden="true">
+    <span class="opening-reveal-wash"></span>
+    <span class="opening-reveal-blade"></span>
+    <span class="opening-reveal-core"></span>
+  </div>
+
+  <div class="opening-wind" aria-hidden="true"></div>
+
+  <svg class="opening-figure" viewBox="0 0 200 330" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+    <polygon class="opening-blade" points="100,4 102.6,48 97.4,48" />
+    <rect class="opening-crossguard" x="88" y="48" width="24" height="3.2" rx="1.4" />
+    <path class="opening-body" d="M 100 52 L 118 98 L 114 132 C 127 182 139 232 143 290 C 121 276 79 276 57 290 C 61 232 73 182 86 132 L 82 98 Z" />
+    <circle class="opening-head" cx="100" cy="78" r="13" />
+  </svg>
+
+  <div class="opening-rays" aria-hidden="true"></div>
+  <div class="opening-core" aria-hidden="true"></div>
+  <div class="opening-pillar" aria-hidden="true"></div>
+
+  <div class="opening-beam" aria-hidden="true"></div>
+  <div class="opening-flash" aria-hidden="true"></div>
+
+  <div class="opening-title" aria-hidden="true">
+    <span class="opening-excalibur">EXCALIBUR</span>
+    <span class="opening-meme">咖喱棒</span>
+    <span class="opening-sub">— 约定的胜利之剑 —</span>
+  </div>
+
+  <button class="opening-unmute" id="opening-unmute" type="button" hidden>🔇 点击有声</button>
+  <button class="opening-skip" id="opening-skip" type="button">跳过 ▶</button>
+</div>
+
+<style>
+  /* ---------- 金光调色板 ---------- */
+  .opening-sequence {
+    --ex-gold-bright: #fff7cf;
+    --ex-gold: #ffd76b;
+    --ex-gold-deep: #f5a623;
+    --ex-wind: #bfe3ff;
+
+    position: fixed;
+    inset: 0;
+    z-index: 99999;              /* 压住 reading-progress(100) 等一切层 */
+    background: #000;
+    opacity: 0;                  /* 默认不可见，JS 加 .playing 才显示 */
+    pointer-events: none;
+    overflow: hidden;
+    contain: layout paint style;
+  }
+
+  .opening-sequence.playing {
+    opacity: 1;
+    pointer-events: auto;        /* 播放期间接管点击，下方博客不可交互 */
+  }
+
+  .opening-sequence.idle {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .opening-sequence.loading {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ---------- 真实视频层（视频模式：盖住 CSS 光层，作为画面主体） ---------- */
+  .opening-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;            /* 全屏铺满；想完整不裁切改成 contain */
+    object-position: center;
+    z-index: 3;                   /* 在 CSS 光层之上、标题/耀斑之下 */
+    opacity: 0;
+    background: #000;
+    transition: opacity 0.4s ease;
+    transform: translateZ(0);
+    will-change: opacity;
+  }
+  .opening-sequence.video-mode {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .opening-sequence.video-mode .opening-video {
+    opacity: 1;
+  }
+  .opening-sequence.video-mode .opening-skip {
+    opacity: 1;                    /* CSS 模式靠 .playing 动画淡入；视频模式直接显示 */
+  }
+  /* 视频模式下隐藏 CSS 分镜（避免多余叠加），保留 skip 与 unmute */
+  .opening-sequence.video-mode .opening-wind,
+  .opening-sequence.video-mode .opening-figure,
+  .opening-sequence.video-mode .opening-rays,
+  .opening-sequence.video-mode .opening-core,
+  .opening-sequence.video-mode .opening-pillar,
+  .opening-sequence.video-mode .opening-beam,
+  .opening-sequence.video-mode .opening-flash,
+  .opening-sequence.video-mode .opening-title {
+    display: none;
+  }
+
+  /* 结束淡出：耀斑后白光退去，露出底层博客 */
+  .opening-sequence.done {
+    pointer-events: none;
+    animation: openingFadeOut 0.7s ease forwards;
+  }
+
+  /* ---------- 收尾：金色剑光暗淡后显露博客 ---------- */
+  .opening-sword-reveal {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+    opacity: 0;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 50% 52%, rgba(255, 255, 250, 0.98) 0 8%, rgba(255, 226, 142, 0.8) 17%, rgba(245, 166, 35, 0.36) 35%, rgba(0, 0, 0, 0.72) 72%, rgba(0, 0, 0, 0.92) 100%);
+    transform: translateZ(0);
+    will-change: opacity;
+  }
+
+  .opening-reveal-wash,
+  .opening-reveal-blade,
+  .opening-reveal-core {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .opening-reveal-wash {
+    background:
+      radial-gradient(ellipse 52% 32% at 50% 52%, rgba(255, 255, 255, 0.72), rgba(255, 223, 130, 0.42) 34%, transparent 72%),
+      radial-gradient(ellipse 92% 58% at 50% 58%, rgba(255, 199, 82, 0.24), transparent 68%);
+    opacity: 1;
+    transform: translateZ(0) scale(1);
+    will-change: opacity, transform;
+  }
+
+  .opening-reveal-blade {
+    left: 50%;
+    width: clamp(10px, 1.2vw, 18px);
+    height: 118vh;
+    inset: -9vh auto auto 50%;
+    transform: translateX(-50%) rotate(-3deg) scaleY(1);
+    transform-origin: 50% 52%;
+    border-radius: 999px;
+    background:
+      linear-gradient(180deg, transparent 0%, rgba(255, 248, 219, 0.5) 14%, #fffef4 42%, rgba(255, 216, 112, 0.72) 58%, transparent 100%);
+    box-shadow:
+      0 0 18px rgba(255, 255, 238, 0.9),
+      0 0 56px rgba(255, 215, 107, 0.72),
+      0 0 140px rgba(245, 166, 35, 0.46);
+    will-change: transform, opacity;
+  }
+
+  .opening-reveal-core {
+    background:
+      linear-gradient(93deg, transparent 0 38%, rgba(255, 245, 202, 0.0) 44%, rgba(255, 255, 255, 0.7) 50%, rgba(255, 217, 114, 0.0) 57%, transparent 100%),
+      radial-gradient(circle at 50% 52%, rgba(255, 255, 255, 0.62), rgba(255, 218, 120, 0.26) 21%, transparent 46%);
+    will-change: opacity, transform;
+  }
+
+  .opening-sequence.revealing {
+    background: transparent;
+    opacity: 1;
+    pointer-events: none;
+  }
+
+  .opening-sequence.pre-revealing {
+    background: transparent;
+  }
+
+  .opening-sequence.pre-revealing .opening-video {
+    opacity: 0.94;
+    transition: opacity 0.9s ease-out;
+  }
+
+  .opening-sequence.pre-revealing .opening-sword-reveal {
+    opacity: 0.28;
+    transition: opacity 0.9s ease-out;
+  }
+
+  .opening-sequence.pre-revealing .opening-reveal-wash {
+    opacity: 0.42;
+    transform: translateZ(0) scale(0.96);
+  }
+
+  .opening-sequence.pre-revealing .opening-reveal-blade {
+    opacity: 0.55;
+    transform: translateX(-50%) rotate(-3deg) scaleY(1.04) scaleX(0.72);
+  }
+
+  .opening-sequence.pre-revealing .opening-reveal-core {
+    opacity: 0.36;
+    transform: scale(0.96);
+  }
+
+  .opening-sequence.revealing .opening-video {
+    opacity: 0;
+    transition: opacity 1.1s ease-out;
+  }
+
+  .opening-sequence.revealing .opening-unmute,
+  .opening-sequence.revealing .opening-skip {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease;
+  }
+
+  .opening-sequence.revealing .opening-sword-reveal {
+    animation: swordRevealFade 2.1s cubic-bezier(0.18, 0.72, 0.22, 1) forwards;
+  }
+
+  .opening-sequence.revealing .opening-reveal-wash {
+    animation: swordRevealWash 2.1s ease-out forwards;
+  }
+
+  .opening-sequence.revealing .opening-reveal-blade {
+    animation: swordRevealBlade 2.1s cubic-bezier(0.18, 0.72, 0.22, 1) forwards;
+  }
+
+  .opening-sequence.revealing .opening-reveal-core {
+    animation: swordRevealCore 2.1s ease-out forwards;
+  }
+
+  .opening-sequence.revealing .opening-flash {
+    animation: openingFlashOut 0.7s ease forwards;
+  }
+
+  .opening-particles,
+  .opening-wind,
+  .opening-core,
+  .opening-pillar,
+  .opening-beam,
+  .opening-flash {
+    position: absolute;
+    mix-blend-mode: screen;       /* 光层在黑底上叠加发亮 */
+  }
+
+  .opening-particles {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 3;                 /* 火星在剪影/光柱之前，呈前景飘动感 */
+  }
+
+  /* ---------- 风涡（Invisible Air 汇聚） ---------- */
+  .opening-wind {
+    top: 50%;
+    left: 50%;
+    width: min(72vmin, 580px);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%) scale(2.2);
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      rgba(191, 227, 255, 0.0) 30deg,
+      rgba(191, 227, 255, 0.35) 90deg,
+      transparent 150deg,
+      rgba(191, 227, 255, 0.25) 240deg,
+      transparent 320deg
+    );
+    filter: blur(10px);
+    opacity: 0;
+    z-index: 0;
+  }
+
+  /* ---------- Saber 抬剑剪影（原创 SVG，被金光背光打亮） ---------- */
+  .opening-figure {
+    position: absolute;
+    bottom: 14%;
+    left: 50%;
+    height: 34vh;
+    width: auto;
+    transform: translateX(-50%) scale(0.92);
+    transform-origin: bottom center;
+    opacity: 0;
+    z-index: 2;                 /* 在辉光(core/halo)之前，形成背光剪影 */
+    fill: #040406;
+    filter:
+      drop-shadow(0 0 2px rgba(255, 215, 107, 0.5))   /* 淡金背光，让剪影在暗底上可辨 */
+      drop-shadow(0 0 7px rgba(0, 0, 0, 0.9));
+    mix-blend-mode: normal;     /* 剪影本身不参与 screen 叠加，保持实色 */
+  }
+  .opening-blade {
+    fill: rgba(255, 247, 207, 0.0);  /* 剑刃由光柱代替，这里透明，仅留剑格轮廓 */
+  }
+
+  /* ---------- god rays（剑尖放射光锥） ---------- */
+  .opening-rays {
+    position: absolute;
+    top: 52%;                   /* 与剑尖（bottom 48%）对齐 */
+    left: 50%;
+    width: min(170vmax, 1800px);
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%) scale(0.2) rotate(0deg);
+    background: repeating-conic-gradient(
+      from 0deg,
+      rgba(255, 247, 207, 0) 0deg,
+      rgba(255, 247, 207, 0) 2.5deg,
+      rgba(255, 215, 107, 0.55) 4deg,
+      rgba(255, 247, 207, 0) 6deg
+    );
+    -webkit-mask: radial-gradient(circle, #000 0%, rgba(0, 0, 0, 0.5) 18%, transparent 58%);
+    mask: radial-gradient(circle, #000 0%, rgba(0, 0, 0, 0.5) 18%, transparent 58%);
+    mix-blend-mode: screen;
+    opacity: 0;
+    z-index: 1;
+    will-change: transform, opacity;
+  }
+
+  /* ---------- 充能光点（剑尖聚能） ---------- */
+  .opening-core {
+    bottom: 48%;
+    left: 50%;
+    width: 48px;
+    height: 48px;
+    transform: translateX(-50%) scale(0.2);
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      var(--ex-gold-bright) 0%,
+      var(--ex-gold) 38%,
+      rgba(245, 166, 35, 0) 72%
+    );
+    filter: blur(2px);
+    opacity: 0;
+    z-index: 1;
+  }
+
+  /* ---------- 金色光柱（拔地而起） ---------- */
+  .opening-pillar {
+    bottom: 48%;
+    left: 50%;
+    width: 16px;
+    height: 56vh;
+    transform: translateX(-50%) scaleY(0);
+    transform-origin: bottom center;
+    background: linear-gradient(
+      to top,
+      var(--ex-gold-bright) 0%,
+      var(--ex-gold) 28%,
+      rgba(245, 166, 35, 0.55) 68%,
+      transparent 100%
+    );
+    box-shadow:
+      0 0 40px 12px var(--ex-gold),
+      0 0 120px 44px rgba(245, 166, 35, 0.45);
+    opacity: 0;
+    z-index: 1;
+  }
+  .opening-pillar::after {
+    /* 光柱根部的宽幅辉光晕 */
+    content: '';
+    position: absolute;
+    bottom: -40px;
+    left: 50%;
+    width: 360px;
+    height: 360px;
+    transform: translateX(-50%) scale(0.3);
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      rgba(255, 215, 107, 0.55) 0%,
+      rgba(245, 166, 35, 0.18) 40%,
+      transparent 70%
+    );
+  }
+
+  /* ---------- 横扫光束（释放的一斩） ---------- */
+  .opening-beam {
+    top: 0;
+    left: 0;
+    width: 220vw;
+    height: 100vh;
+    transform: translateX(-135vw) skewX(-12deg);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 247, 207, 0) 32%,
+      rgba(255, 247, 207, 0.85) 47%,
+      #ffffff 50%,
+      rgba(255, 247, 207, 0.85) 53%,
+      rgba(255, 247, 207, 0) 68%,
+      transparent 100%
+    );
+    opacity: 0;
+    z-index: 2;
+  }
+
+  /* ---------- 全屏耀斑 ---------- */
+  .opening-flash {
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    z-index: 3;
+  }
+
+  /* ---------- 标题 ---------- */
+  .opening-title {
+    position: absolute;
+    top: 34%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .opening-excalibur {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: clamp(2.2rem, 9vw, 6rem);
+    letter-spacing: 0.16em;
+    color: var(--ex-gold-bright);
+    text-shadow:
+      0 0 18px var(--ex-gold),
+      0 0 48px var(--ex-gold-deep);
+    opacity: 0;
+  }
+  .opening-meme {
+    font-family: 'Chakra Petch', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    font-weight: 700;
+    font-size: clamp(1.4rem, 5vw, 2.6rem);
+    letter-spacing: 0.4em;
+    color: var(--ex-gold);
+    text-shadow: 0 0 16px rgba(255, 215, 107, 0.7);
+    opacity: 0;
+  }
+  .opening-sub {
+    font-family: 'Chakra Petch', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    font-size: clamp(0.7rem, 2vw, 0.95rem);
+    letter-spacing: 0.35em;
+    color: rgba(255, 233, 175, 0.6);
+    opacity: 0;
+  }
+
+  /* ---------- 跳过按钮 ---------- */
+  .opening-skip {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    z-index: 5;
+    padding: 0.4rem 0.85rem;
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    color: var(--ex-gold);
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 215, 107, 0.4);
+    border-radius: 6px;
+    cursor: pointer;
+    opacity: 0;
+    backdrop-filter: blur(2px);
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+  }
+  .opening-skip:hover {
+    color: #fff;
+    border-color: var(--ex-gold);
+    background: rgba(245, 166, 35, 0.25);
+  }
+
+  /* ---------- 有声按钮（视频模式：浏览器限制自动播放必须静音，点击解除） ---------- */
+  .opening-unmute {
+    position: absolute;
+    top: 20px;
+    right: 110px;
+    z-index: 5;
+    padding: 0.4rem 0.7rem;
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    color: var(--ex-gold);
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 215, 107, 0.4);
+    border-radius: 6px;
+    cursor: pointer;
+    backdrop-filter: blur(2px);
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+  }
+  .opening-unmute[hidden] { display: none; }
+  .opening-unmute:hover {
+    color: #fff;
+    border-color: var(--ex-gold);
+    background: rgba(245, 166, 35, 0.25);
+  }
+
+  .opening-replay {
+    position: fixed;
+    left: 22px;
+    bottom: 22px;
+    z-index: 120;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 38px;
+    padding: 0.45rem 0.8rem;
+    font-family: 'Chakra Petch', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #0f609b;
+    border: 1px solid rgba(25, 118, 188, 0.28);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.42);
+    box-shadow: 0 18px 42px rgba(50, 94, 126, 0.16);
+    backdrop-filter: blur(12px) saturate(1.08);
+    cursor: pointer;
+    transition:
+      transform 0.18s ease,
+      background 0.18s ease,
+      border-color 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+
+  .opening-replay:hover {
+    transform: translateY(-2px);
+    border-color: rgba(25, 118, 188, 0.46);
+    background: rgba(255, 255, 255, 0.58);
+    box-shadow: 0 22px 48px rgba(50, 94, 126, 0.2);
+  }
+
+  .opening-replay[hidden] {
+    display: none;
+  }
+
+  /* =========================================================
+     播放时间轴（仅在 .playing 下触发，避免非首页/已播放页面空转）
+     ========================================================= */
+  .opening-sequence.playing .opening-skip {
+    animation: openingFadeIn 0.4s ease 0.2s forwards;
+  }
+  .opening-sequence.playing .opening-wind {
+    animation: openingWind 1.5s ease-in-out 0.4s both;
+  }
+  .opening-sequence.playing .opening-figure {
+    animation: openingFigureIn 1.2s ease-out 0.6s forwards;
+  }
+  .opening-sequence.playing .opening-rays {
+    animation: openingRays 2.6s ease-out 1.8s forwards;
+  }
+  .opening-sequence.playing .opening-core {
+    animation: openingCore 1.3s ease-out 1.1s forwards;
+  }
+  .opening-sequence.playing .opening-pillar {
+    animation: openingPillar 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) 2.0s forwards;
+  }
+  .opening-sequence.playing .opening-pillar::after {
+    animation: openingHalo 1.4s ease-out 1.9s forwards;
+  }
+  .opening-sequence.playing .opening-excalibur {
+    animation: openingIgnite 1.8s steps(1, end) 2.5s forwards;
+  }
+  .opening-sequence.playing .opening-meme {
+    animation: openingMemeIn 0.8s ease-out 2.9s forwards;
+  }
+  .opening-sequence.playing .opening-sub {
+    animation: openingFadeIn 0.8s ease-out 3.2s forwards;
+  }
+  .opening-sequence.playing .opening-beam {
+    animation: openingBeam 0.55s ease-in 3.55s both;
+  }
+  .opening-sequence.playing .opening-flash {
+    animation: openingFlash 0.55s ease-in 3.8s forwards;   /* 耀斑结束 → JS 收尾 */
+  }
+
+  /* ---------- 关键帧 ---------- */
+  @keyframes openingFadeOut {
+    to { opacity: 0; }
+  }
+  @keyframes openingFadeIn {
+    to { opacity: 1; }
+  }
+  @keyframes openingWind {
+    0%   { transform: translate(-50%, -50%) scale(2.2) rotate(0deg); opacity: 0; }
+    25%  { opacity: 0.55; }
+    100% { transform: translate(-50%, -50%) scale(0.15) rotate(540deg); opacity: 0; }
+  }
+  @keyframes openingFigureIn {
+    0%   { opacity: 0; transform: translateX(-50%) scale(0.92); }
+    100% { opacity: 0.95; transform: translateX(-50%) scale(1); }
+  }
+  @keyframes openingRays {
+    0%   { transform: translate(-50%, -50%) scale(0.15) rotate(0deg); opacity: 0; }
+    30%  { opacity: 0.7; }
+    100% { transform: translate(-50%, -50%) scale(1.15) rotate(45deg); opacity: 0.5; }
+  }
+  @keyframes openingCore {
+    0%   { transform: translateX(-50%) scale(0.2); opacity: 0; }
+    100% { transform: translateX(-50%) scale(3.4); opacity: 1; }
+  }
+  @keyframes openingPillar {
+    0%   { transform: translateX(-50%) scaleY(0); opacity: 0; }
+    18%  { opacity: 1; }
+    100% { transform: translateX(-50%) scaleY(1.18); opacity: 0.9; }
+  }
+  @keyframes openingHalo {
+    0%   { transform: translateX(-50%) scale(0.3); opacity: 0; }
+    100% { transform: translateX(-50%) scale(1); opacity: 0.85; }
+  }
+  @keyframes openingIgnite {
+    /* 闪烁点亮：模拟金光「点灯」的不稳定燃起 */
+    0%   { opacity: 0; }
+    8%   { opacity: 0.95; }
+    11%  { opacity: 0.1; }
+    18%  { opacity: 1; }
+    21%  { opacity: 0.25; }
+    32%  { opacity: 1; }
+    55%  { opacity: 0.75; }
+    66%  { opacity: 1; }
+    100% { opacity: 1; }
+  }
+  @keyframes openingMemeIn {
+    0%   { opacity: 0; transform: translateY(10px) scale(0.9); }
+    100% { opacity: 0.95; transform: translateY(0) scale(1); }
+  }
+  @keyframes openingBeam {
+    0%   { transform: translateX(-135vw) skewX(-12deg); opacity: 0; }
+    12%  { opacity: 1; }
+    88%  { opacity: 1; }
+    100% { transform: translateX(35vw) skewX(-12deg); opacity: 0; }
+  }
+  @keyframes openingFlash {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @keyframes openingFlashOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  @keyframes swordRevealFade {
+    0% { opacity: 0.62; }
+    18% { opacity: 0.78; }
+    58% { opacity: 0.42; }
+    100% { opacity: 0; }
+  }
+  @keyframes swordRevealWash {
+    0% { opacity: 0.62; transform: scale(0.98); }
+    42% { opacity: 0.44; transform: scale(1.04); }
+    100% { opacity: 0; transform: scale(1.22); }
+  }
+  @keyframes swordRevealBlade {
+    0% { opacity: 0.82; transform: translateX(-50%) rotate(-3deg) scaleY(1.06) scaleX(0.82); }
+    34% { opacity: 0.7; transform: translateX(-50%) rotate(-3deg) scaleY(0.96) scaleX(0.68); }
+    74% { opacity: 0.28; transform: translateX(-50%) rotate(-3deg) scaleY(0.74) scaleX(0.38); }
+    100% { opacity: 0; transform: translateX(-50%) rotate(-3deg) scaleY(0.56) scaleX(0.18); }
+  }
+  @keyframes swordRevealCore {
+    0% { opacity: 0.58; transform: scale(0.98); }
+    36% { opacity: 0.42; transform: scale(1.06); }
+    100% { opacity: 0; transform: scale(1.18); }
+  }
+
+  /* ---------- 无障碍 & 移动端 ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    .opening-sequence { display: none; }
+  }
+  @media (max-width: 700px) {
+    .opening-pillar { width: 12px; }
+    .opening-skip { top: 14px; right: 14px; }
+    .opening-replay {
+      left: 14px;
+      bottom: 14px;
+      min-height: 36px;
+      padding: 0.42rem 0.7rem;
+      font-size: 0.78rem;
+    }
+  }
+</style>
+
+<script is:inline>
+  (() => {
+    const seq = document.getElementById('opening-sequence');
+    if (!seq) return;
+
+    const skipBtn = document.getElementById('opening-skip');
+    const flash = seq.querySelector('.opening-flash');
+    const canvas = document.getElementById('opening-particles');
+    const video = document.getElementById('opening-video');
+    const unmuteBtn = document.getElementById('opening-unmute');
+    const replayBtn = document.getElementById('opening-replay');
+
+    const FLAG = 'sqkstt.opening.played';
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // 仅首页首播；其他页面/已播放/无障碍模式 → 直接移除覆盖层
+    const isHome = location.pathname === '/';
+
+    /* ---------- 金色火星粒子（沿光柱上升，drawImage 预渲染精灵避免每帧梯度） ---------- */
+    let emberSprite = null;
+    let particles = [];
+    let raf = 0;
+
+    const makeEmberSprite = () => {
+      const size = 26;
+      const off = document.createElement('canvas');
+      off.width = off.height = size;
+      const o = off.getContext('2d');
+      const g = o.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      g.addColorStop(0, 'rgba(255,250,220,1)');
+      g.addColorStop(0.35, 'rgba(255,215,107,0.7)');
+      g.addColorStop(1, 'rgba(245,166,35,0)');
+      o.fillStyle = g;
+      o.beginPath();
+      o.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+      o.fill();
+      emberSprite = off;
+    };
+
+    const startParticles = () => {
+      if (!canvas || !canvas.getContext) return;
+      const ctx = canvas.getContext('2d');
+      let W = (canvas.width = window.innerWidth);
+      let H = (canvas.height = window.innerHeight);
+      if (!emberSprite) makeEmberSprite();
+      particles = [];
+
+      const baseY = () => H * 0.52;   // 与剑尖/光柱根部对齐（bottom:48%）
+      const cx = () => W / 2;
+
+      const spawn = () => {
+        particles.push({
+          x: cx() + (Math.random() - 0.5) * 30,
+          y: baseY() + Math.random() * 24,
+          vx: (Math.random() - 0.5) * 0.7,
+          vy: -(2 + Math.random() * 4.5),
+          life: 0,
+          max: 55 + Math.random() * 70,
+          r: 1 + Math.random() * 2.2,
+        });
+      };
+
+      const tick = () => {
+        ctx.clearRect(0, 0, W, H);
+        for (let i = 0; i < 3; i++) spawn();
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          p.life++;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy *= 0.994;
+          const t = p.life / p.max;
+          if (t >= 1) { particles.splice(i, 1); continue; }
+          const a = (1 - t) * 0.9;
+          const s = p.r * 2.4 * (1 + t * 0.8);
+          ctx.globalAlpha = a;
+          ctx.drawImage(emberSprite, p.x - s / 2, p.y - s / 2, s, s);
+        }
+        ctx.globalAlpha = 1;
+        raf = requestAnimationFrame(tick);
+      };
+
+      const onResize = () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; };
+      window.addEventListener('resize', onResize);
+      raf = requestAnimationFrame(tick);
+    };
+
+    const stopParticles = () => {
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+      particles = [];
+    };
+
+    /* ---------- 收尾：视频结束/CSS 耀斑结束/跳过 → 剑光暗淡 → 交还博客 ---------- */
+    let finished = false;
+    let revealTimer = 0;
+    let blogWarmupFrame = 0;
+    let handoffStarted = false;
+    let handoffTick = 0;
+    let stallFinishTimer = 0;
+    let revealStartTimer = 0;
+
+    const prewarmBlogScene = () => {
+      if (document.body.classList.contains('blog-scene-live')) return;
+      document.body.classList.add('opening-handoff');
+      document.body.classList.add('blog-scene-live');
+    };
+
+    const beginHandoff = (force = false) => {
+      if (handoffStarted || (finished && !force)) return;
+      handoffStarted = true;
+      prewarmBlogScene();
+      seq.classList.add('pre-revealing');
+      window.dispatchEvent(new CustomEvent('sqkstt:opening-handoff'));
+    };
+
+    const stopHandoffWatcher = () => {
+      if (handoffTick) {
+        cancelAnimationFrame(handoffTick);
+        handoffTick = 0;
+      }
+    };
+
+    const watchVideoHandoff = () => {
+      stopHandoffWatcher();
+      if (!video) return;
+      let lastMediaTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+      let lastProgressAt = Date.now();
+      const tick = () => {
+        if (finished || !video || video.paused || video.ended) {
+          handoffTick = 0;
+          return;
+        }
+        const duration = Number.isFinite(video.duration) ? video.duration : 0;
+        const current = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+        if (current > lastMediaTime + 0.04) {
+          lastMediaTime = current;
+          lastProgressAt = Date.now();
+        }
+        if (duration > 0 && current >= duration - 1.05) {
+          beginHandoff();
+          handoffTick = 0;
+          return;
+        }
+        if (current >= 2.8 && Date.now() - lastProgressAt > 1400) {
+          beginHandoff();
+          if (!stallFinishTimer) {
+            stallFinishTimer = window.setTimeout(finish, 1100);
+          }
+          handoffTick = 0;
+          return;
+        }
+        handoffTick = requestAnimationFrame(tick);
+      };
+      handoffTick = requestAnimationFrame(tick);
+    };
+
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      if (revealTimer) { window.clearTimeout(revealTimer); revealTimer = 0; }
+      if (stallFinishTimer) { window.clearTimeout(stallFinishTimer); stallFinishTimer = 0; }
+      if (revealStartTimer) { window.clearTimeout(revealStartTimer); revealStartTimer = 0; }
+      if (blogWarmupFrame) { cancelAnimationFrame(blogWarmupFrame); blogWarmupFrame = 0; }
+      stopHandoffWatcher();
+      sessionStorage.setItem(FLAG, '1');
+      document.body.style.overflow = '';
+      const hadHandoff = handoffStarted;
+      beginHandoff(true);
+      let didSettle = false;
+
+      // 淡出动画结束后真正移除；setTimeout 兜底防 animationend 未触发
+      const settle = () => {
+        if (didSettle) return;
+        didSettle = true;
+        seq.classList.remove('loading', 'playing', 'video-mode', 'pre-revealing', 'revealing', 'done');
+        seq.classList.add('idle');
+        document.body.classList.remove('opening-handoff');
+        window.dispatchEvent(new CustomEvent('sqkstt:opening-settled'));
+        if (replayBtn) replayBtn.hidden = false;
+      };
+      const onFade = (e) => {
+        if (e.target === seq && e.animationName === 'openingFadeOut') {
+          seq.removeEventListener('animationend', onFade);
+          settle();
+        }
+      };
+      seq.addEventListener('animationend', onFade);
+      const startReveal = () => {
+        revealStartTimer = 0;
+        stopParticles();
+        seq.classList.remove('idle');
+        seq.classList.add('pre-revealing', 'revealing');
+        requestAnimationFrame(() => {
+          if (video) video.pause();
+        });
+        window.setTimeout(() => {
+          seq.classList.remove('loading', 'playing', 'video-mode');
+          seq.classList.add('done');
+        }, 2100);
+        window.setTimeout(settle, 2800);
+      };
+
+      if (hadHandoff) {
+        startReveal();
+      } else {
+        revealStartTimer = window.setTimeout(startReveal, 420);
+      }
+    };
+
+    /* ---------- CSS 分镜模式（兜底） ---------- */
+    const playCSS = () => {
+      seq.classList.add('playing');
+      startParticles();
+
+      flash.addEventListener('animationend', function onFlash(e) {
+        if (e.animationName === 'openingFlash') {
+          flash.removeEventListener('animationend', onFlash);
+          finish();
+        }
+      });
+      window.setTimeout(finish, 6000);            // 总时长兜底
+    };
+
+    /* ---------- 视频模式 ---------- */
+    const playVideo = () => {
+      seq.classList.add('video-mode');
+      if (unmuteBtn) unmuteBtn.hidden = false;    // 视频模式才出现「点击有声」
+
+      video.addEventListener('ended', () => window.setTimeout(finish, 180), { once: true });
+      // 播放中若出错（文件损坏等）→ 直接收尾交还博客，避免卡死
+      video.addEventListener('error', () => { if (!finished) finish(); }, { once: true });
+
+      const p = video.play();
+      watchVideoHandoff();
+      if (p && typeof p.then === 'function') {
+        p.catch(() => {
+          // 自动播放被拒/文件缺失(404) → 回退到 CSS 分镜
+          if (finished) return;
+          video.removeEventListener('ended', finish);
+          stopHandoffWatcher();
+          seq.classList.remove('video-mode');
+          if (unmuteBtn) unmuteBtn.hidden = true;
+          playCSS();
+        });
+      }
+      // 优先等 ended；兜底也必须按视频真实 currentTime 判断，避免 2K 解码慢时提前切层。
+      const scheduleTailFallback = () => {
+        if (finished) return;
+        const duration = Number.isFinite(video.duration) ? video.duration : 0;
+        const current = Number.isFinite(video.currentTime) ? video.currentTime : 0;
+        if (duration > 0 && current >= duration - 0.12) {
+          finish();
+          return;
+        }
+        revealTimer = window.setTimeout(scheduleTailFallback, 900);
+      };
+      revealTimer = window.setTimeout(scheduleTailFallback, 1200);
+    };
+
+    /* ---------- 有声：浏览器限制自动播放必须静音，用户点击解除 ---------- */
+    if (unmuteBtn && video) {
+      unmuteBtn.addEventListener('click', () => {
+        video.muted = false;
+        try { video.volume = 1; } catch (e) {}
+        unmuteBtn.hidden = true;
+      });
+    }
+
+    /* ---------- 调度：优先视频，回退 CSS ---------- */
+    const play = () => {
+      document.body.style.overflow = 'hidden';    // 播放期间锁定滚动
+      document.body.classList.remove('blog-scene-live', 'opening-handoff');
+      if (replayBtn) replayBtn.hidden = true;
+      skipBtn.addEventListener('click', finish);
+      blogWarmupFrame = requestAnimationFrame(() => {
+        blogWarmupFrame = requestAnimationFrame(() => {
+          blogWarmupFrame = 0;
+          prewarmBlogScene();
+        });
+      });
+
+      if (video && video.querySelector('source')) {
+        // 等到拿到 metadata 判定视频是否可用；超时/出错 → CSS 兜底
+        let decided = false;
+        const decide = (fn) => { if (decided || finished) return; decided = true; fn(); };
+        const readyState = video.readyState;
+        if (readyState >= 1) {
+          decide(playVideo);
+        } else {
+          video.addEventListener('loadedmetadata', () => decide(playVideo), { once: true });
+          video.addEventListener('canplay', () => decide(playVideo), { once: true });
+          video.addEventListener('error', () => decide(playCSS), { once: true });
+          window.setTimeout(() => decide(playCSS), 4200);
+        }
+      } else {
+        playCSS();
+      }
+    };
+
+    const resetMedia = () => {
+      [video].filter(Boolean).forEach((media) => {
+        try {
+          media.pause();
+          media.currentTime = 0;
+          media.load();
+        } catch (e) {}
+      });
+    };
+
+    const startOpening = () => {
+      finished = false;
+      handoffStarted = false;
+      if (revealTimer) { window.clearTimeout(revealTimer); revealTimer = 0; }
+      if (stallFinishTimer) { window.clearTimeout(stallFinishTimer); stallFinishTimer = 0; }
+      if (revealStartTimer) { window.clearTimeout(revealStartTimer); revealStartTimer = 0; }
+      if (blogWarmupFrame) { cancelAnimationFrame(blogWarmupFrame); blogWarmupFrame = 0; }
+      stopHandoffWatcher();
+      stopParticles();
+      resetMedia();
+      seq.classList.remove('idle', 'done', 'pre-revealing', 'revealing', 'playing', 'video-mode');
+      seq.classList.add('loading');
+      play();
+    };
+
+    if (replayBtn) {
+      replayBtn.addEventListener('click', () => {
+        sessionStorage.removeItem(FLAG);
+        startOpening();
+      });
+    }
+
+    if (reduce || !isHome) {
+      seq.remove();
+      if (replayBtn) replayBtn.remove();
+      return;
+    }
+
+    if (sessionStorage.getItem(FLAG)) {
+      seq.classList.add('idle');
+      document.body.classList.add('blog-scene-live');
+      if (replayBtn) replayBtn.hidden = false;
+      return;
+    }
+
+    startOpening();
+  })();
+</script>

@@ -12,6 +12,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 editor*.log
+dev-server*.log
 
 
 # environment variables
@@ -20,6 +21,21 @@ editor*.log
 
 # local-only notes
 LOCAL_EDITING.md
+
+# 大型原始/废弃素材不要提交公开仓库
+public/assets/excalibur-intro.webm
+public/assets/*.mkv
+public/assets/excalibur-contact.jpg
+public/assets/saber-sky-hero.jpg
+public/assets/saber-sky-hero.webp
+public/assets/saber-sky-hero-modern.png
+public/assets/saber-sky-hero-modern.webp
+public/assets/saber-wind-animated.webp
+public/assets/saber.mp4
+public/assets/codex-pet-*.webp
+public/assets/codex-pet-*.png
+public/assets/wind-frames/saber-wind-*.webp
+!public/assets/wind-frames/saber-wind-00.webp
 
 # macOS-specific files
 .DS_Store

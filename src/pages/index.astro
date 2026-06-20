@@ -38,17 +38,17 @@ const tags = new Set(posts.flatMap((post) => post.data.tags));
   <section class="container dashboard-strip" aria-label="博客概览">
     <div class="stat-card">
       <span class="stat-icon"><SiteIcon name="pen" /></span>
-      <strong>{posts.length}</strong>
+      <strong data-count={posts.length}>0</strong>
       <span>已发布文章</span>
     </div>
     <div class="stat-card">
       <span class="stat-icon"><SiteIcon name="category" /></span>
-      <strong>{categories.size}</strong>
+      <strong data-count={categories.size}>0</strong>
       <span>主题分类</span>
     </div>
     <div class="stat-card">
       <span class="stat-icon"><SiteIcon name="tag" /></span>
-      <strong>{tags.size}</strong>
+      <strong data-count={tags.size}>0</strong>
       <span>技术标签</span>
     </div>
     <div class="stat-card status-card">

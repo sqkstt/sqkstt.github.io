@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import SiteIcon from '../components/SiteIcon.astro';
+import OpeningSequence from '../components/OpeningSequence.astro';
 
 interface Props {
   title?: string;
@@ -16,6 +17,7 @@ const {
 
 const siteTitle = title === 'sqkstt777的个人博客' ? title : `${title} | sqkstt777的个人博客`;
 const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
+const shouldRenderOpening = Astro.url.pathname === '/';
 ---
 
 <!doctype html>
@@ -23,7 +25,15 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preload" as="image" href="/assets/wind-frames/saber-wind-00.webp" />
     <title>{siteTitle}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Chakra+Petch:wght@400;500;600;700&family=Share+Tech+Mono&display=swap"
+    />
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
     <link rel="alternate" type="application/rss+xml" title="sqkstt777的个人博客 RSS" href="/rss.xml" />
@@ -34,19 +44,20 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
     <meta name="twitter:card" content="summary" />
   </head>
   <body>
+    {shouldRenderOpening && <OpeningSequence />}
     <div class="reading-progress" id="reading-progress" aria-hidden="true"></div>
     <div class="space-bg" aria-hidden="true">
-      <canvas class="starfield-canvas" id="starfield-canvas" aria-hidden="true"></canvas>
-      <span class="meteor meteor-one"></span>
-      <span class="meteor meteor-two"></span>
-      <span class="meteor meteor-three meteor-violet"></span>
-      <span class="meteor meteor-four"></span>
-      <span class="meteor meteor-five meteor-pink"></span>
-      <span class="meteor meteor-six"></span>
-      <span class="meteor meteor-seven meteor-short"></span>
-      <span class="meteor meteor-eight meteor-long"></span>
-      <span class="meteor meteor-nine"></span>
-      <span class="meteor meteor-ten meteor-pink"></span>
+      <video
+        class="saber-bg-video"
+        id="saber-bg-video"
+        muted
+        loop
+        playsinline
+        preload="none"
+        poster="/assets/wind-frames/saber-wind-00.webp"
+      >
+        <source data-src="/assets/saber1.mp4" type="video/mp4" />
+      </video>
     </div>
     <div class="site-shell">
       <header class="site-header">
@@ -61,6 +72,7 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
             <a href="/tags/" class:list={[Astro.url.pathname.startsWith('/tags') ? 'active' : '']}>标签</a>
             <a href="/about/" class:list={[Astro.url.pathname === '/about/' ? 'active' : '']}>关于</a>
             <a href="/rss.xml">RSS</a>
+            <span class="nav-indicator" aria-hidden="true"></span>
           </nav>
         </div>
       </header>
@@ -75,343 +87,98 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
       </footer>
     </div>
     <button class="back-to-top" id="back-to-top" aria-label="返回顶部">&uarr;</button>
-    <div class="corner-pet" id="corner-pet" data-pet-state="idle" aria-hidden="true">
-      <div class="corner-pet-inner">
-        <span class="corner-pet-sprite"></span>
-      </div>
-    </div>
+    <button class="bg-audio-toggle" id="bg-audio-toggle" type="button" aria-label="开启背景音" title="开启背景音" hidden>
+      <span aria-hidden="true">♪</span>
+    </button>
     <script is:inline>
       (() => {
-        const pet = document.getElementById('corner-pet');
-        if (!pet) return;
+        const video = document.getElementById('saber-bg-video');
+        const toggle = document.getElementById('bg-audio-toggle');
+        if (!video || !toggle) return;
 
-        const storageKey = 'sqkstt.cornerPet.position';
-        const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduceMotion) {
+          video.pause();
+          return;
+        }
 
-        const place = (x, y) => {
-          const rect = pet.getBoundingClientRect();
-          const nextX = clamp(x, 0, window.innerWidth - rect.width);
-          const nextY = clamp(y, 0, window.innerHeight - rect.height);
-          pet.style.left = `${nextX}px`;
-          pet.style.top = `${nextY}px`;
-          pet.style.right = 'auto';
-          pet.style.bottom = 'auto';
+        const source = video.querySelector('source[data-src]');
+        let loadStarted = false;
+        let startTimer = 0;
+
+        const loadVideo = () => {
+          if (loadStarted || !source) return;
+          source.src = source.dataset.src || '';
+          loadStarted = true;
+          video.load();
         };
 
-        const saved = localStorage.getItem(storageKey);
-        if (saved) {
+        const setAudioState = (enabled) => {
+          toggle.classList.toggle('active', enabled);
+          toggle.setAttribute('aria-label', enabled ? '关闭背景音' : '开启背景音');
+          toggle.title = enabled ? '关闭背景音' : '开启背景音';
+        };
+
+        const showToggle = () => {
+          toggle.hidden = false;
+        };
+
+        if (video.readyState >= 1) showToggle();
+        else video.addEventListener('loadedmetadata', showToggle, { once: true });
+
+        video.muted = true;
+        video.volume = 0.65;
+
+        const startMuted = () => {
+          loadVideo();
+          video.muted = true;
+          video.play().catch(() => {});
+        };
+
+        const scheduleStart = (delay = 0) => {
+          window.clearTimeout(startTimer);
+          startTimer = window.setTimeout(startMuted, delay);
+        };
+
+        toggle.addEventListener('click', async () => {
+          loadVideo();
+          const enableAudio = video.muted;
+          video.muted = !enableAudio;
           try {
-            const { x, y } = JSON.parse(saved);
-            requestAnimationFrame(() => place(Number(x), Number(y)));
+            await video.play();
+            setAudioState(enableAudio);
           } catch {
-            localStorage.removeItem(storageKey);
+            video.muted = true;
+            setAudioState(false);
           }
-        }
-
-        let drag = null;
-        let idleTimer = 0;
-        let lastMove = { x: 0, y: 0, t: 0 };
-
-        const setPetState = (state) => {
-          if (pet.dataset.petState !== state) pet.dataset.petState = state;
-        };
-
-        const queueIdle = () => {
-          window.clearTimeout(idleTimer);
-          idleTimer = window.setTimeout(() => setPetState('idle'), 110);
-        };
-
-        pet.addEventListener('pointerdown', (event) => {
-          if (event.button !== undefined && event.button !== 0) return;
-          const rect = pet.getBoundingClientRect();
-          const now = performance.now();
-          drag = {
-            offsetX: event.clientX - rect.left,
-            offsetY: event.clientY - rect.top,
-          };
-          lastMove = { x: event.clientX, y: event.clientY, t: now };
-          pet.classList.add('dragging');
-          setPetState('idle');
-          pet.setPointerCapture?.(event.pointerId);
-          event.preventDefault();
         });
 
-        pet.addEventListener('pointermove', (event) => {
-          if (!drag) return;
-          place(event.clientX - drag.offsetX, event.clientY - drag.offsetY);
-          const now = performance.now();
-          const dx = event.clientX - lastMove.x;
-          const dy = event.clientY - lastMove.y;
-          const elapsed = Math.max(now - lastMove.t, 16);
-          const speed = Math.hypot(dx, dy) / elapsed;
-
-          if (Math.abs(dx) > 1.8 || speed > 0.08) {
-            setPetState(dx < 0 ? 'run-left' : 'run-right');
-          }
-
-          lastMove = { x: event.clientX, y: event.clientY, t: now };
-          queueIdle();
-        });
-
-        const endDrag = (event) => {
-          if (!drag) return;
-          drag = null;
-          window.clearTimeout(idleTimer);
-          pet.classList.remove('dragging');
-          setPetState('idle');
-          pet.releasePointerCapture?.(event.pointerId);
-          const rect = pet.getBoundingClientRect();
-          localStorage.setItem(storageKey, JSON.stringify({ x: rect.left, y: rect.top }));
-        };
-
-        pet.addEventListener('pointerup', endDrag);
-        pet.addEventListener('pointercancel', endDrag);
-        window.addEventListener('resize', () => {
-          const rect = pet.getBoundingClientRect();
-          if (getComputedStyle(pet).display !== 'none') place(rect.left, rect.top);
-        });
-      })();
-    </script>
-    <script is:inline>
-      (function() {
-        var canvas = document.getElementById('starfield-canvas');
-        if (!canvas) return;
-        var ctx = canvas.getContext('2d');
-        var stars = [];
-        var constellations = [];
-        var animId = null;
-        var W = 0, H = 0;
-        var lastFrame = 0;
-        var FRAME_MS = 1000 / 30;
-
-        function resize() {
-          W = window.innerWidth;
-          H = window.innerHeight;
-          canvas.width = W;
-          canvas.height = H;
-          canvas.style.width = W + 'px';
-          canvas.style.height = H + 'px';
-        }
-
-        function makeStars() {
-          var count = Math.floor((W * H) / 1000);
-          stars = [];
-          var i, s, radius, r, g, b;
-          for (i = 0; i < count; i++) {
-            s = Math.random();
-            if (s < 0.70)      radius = 0.3 + Math.random() * 0.8;
-            else if (s < 0.90) radius = 0.8 + Math.random() * 1.8;
-            else if (s < 0.98) radius = 1.8 + Math.random() * 2.2;
-            else               radius = 3.0 + Math.random() * 3.5;
-
-            var hr = Math.random();
-            if (hr < 0.55)      { r = 185; g = 210; b = 230; }
-            else if (hr < 0.85) { r = 230; g = 228; b = 215; }
-            else if (hr < 0.95) { r = 245; g = 195; b = 125; }
-            else if (hr < 0.99) { r = 135; g = 180; b = 240; }
-            else                { r = 240; g = 145; b = 90; }
-            r += Math.floor(Math.random() * 40);
-            g += Math.floor(Math.random() * 30);
-            b += Math.floor(Math.random() * 20);
-
-            var star = {
-              x: Math.random() * W,
-              y: Math.random() * H,
-              radius: radius,
-              r: r, g: g, b: b,
-              baseA: 0.3 + Math.random() * 0.7,
-              spd: 0.3 + Math.random() * 2.5,
-              ph: Math.random() * Math.PI * 2,
-              amp: 0.05 + Math.random() * 0.5,
-              stl: Math.floor(Math.random() * 3),
-            };
-
-            // Pre-render glow texture for medium+ stars
-            if (radius > 1.5) {
-              var size = Math.ceil(radius * 3.2);
-              var off = document.createElement('canvas');
-              off.width = size;
-              off.height = size;
-              var octx = off.getContext('2d');
-              var cx = size / 2, cy = size / 2;
-              var g = octx.createRadialGradient(cx, cy, radius * 0.05, cx, cy, radius * 1.6);
-              g.addColorStop(0, 'rgba(' + r + ',' + g + ',' + b + ',0.65)');
-              g.addColorStop(0.4, 'rgba(' + r + ',' + g + ',' + b + ',0.18)');
-              g.addColorStop(1, 'rgba(0,0,0,0)');
-              octx.fillStyle = g;
-              octx.beginPath();
-              octx.arc(cx, cy, radius * 1.6, 0, Math.PI * 2);
-              octx.fill();
-              star._glow = off;
-            }
-
-            stars.push(star);
-          }
-        }
-
-        function makeCons() {
-          var patterns = [
-            { pts: [[130,5],[105,40],[80,80],[80,80],[45,70],[20,115],[55,130]], ln: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,3]] },
-            { pts: [[30,5],[110,5],[45,70],[75,70],[105,70],[20,135],[125,130]], ln: [[0,2],[0,3],[1,3],[1,4],[2,3],[3,4],[2,5],[4,6],[5,6]] },
-            { pts: [[5,20],[35,5],[65,25],[95,5],[125,20]], ln: [[0,1],[1,2],[2,3],[3,4]] },
-            { pts: [[5,60],[30,30],[55,15],[80,20],[65,50],[40,65],[50,115]], ln: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[5,6]] },
-            { pts: [[65,5],[80,30],[90,60],[80,90],[55,115],[30,130],[15,115]], ln: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6]] },
-            { pts: [[30,10],[80,10],[30,50],[5,60],[30,70],[80,70],[55,50],[55,95]], ln: [[0,2],[1,2],[0,1],[2,3],[3,4],[2,4],[4,7],[4,5],[5,7],[2,6],[6,5]] },
-            { pts: [[65,5],[65,50],[10,85],[65,85],[120,85],[65,120],[65,155]], ln: [[0,1],[1,2],[1,3],[1,4],[3,5],[5,6]] },
-          ];
-          constellations = [];
-          var sc = Math.min(W, H) * 0.0015;
-          var positions = [
-            [0.05, 0.22], [0.28, 0.08], [0.58, 0.18],
-            [0.12, 0.55], [0.50, 0.35], [0.72, 0.52],
-            [0.24, 0.75],
-          ];
-          for (var c = 0; c < patterns.length; c++) {
-            var p = patterns[c];
-            var px = positions[c][0] * W;
-            var py = positions[c][1] * H;
-
-            var pts = [];
-            for (var i = 0; i < p.pts.length; i++) {
-              pts.push({ x: px + p.pts[i][0] * sc, y: py + p.pts[i][1] * sc });
-              var cr = 2.5 + Math.random() * 3.5;
-              var star = {
-                x: pts[i].x, y: pts[i].y,
-                radius: cr,
-                r: 210, g: 228, b: 248,
-                baseA: 0.8 + Math.random() * 0.2,
-                spd: 0.1 + Math.random() * 0.3,
-                ph: Math.random() * Math.PI * 2,
-                amp: 0.02 + Math.random() * 0.1,
-                stl: 0, conId: c,
-              };
-              // Pre-render glow for constellation stars
-              var size = Math.ceil(cr * 3.2);
-              var off = document.createElement('canvas');
-              off.width = size;
-              off.height = size;
-              var octx = off.getContext('2d');
-              var cx = size / 2, cy = size / 2;
-              var g = octx.createRadialGradient(cx, cy, cr * 0.05, cx, cy, cr * 1.6);
-              g.addColorStop(0, 'rgba(210,228,248,0.65)');
-              g.addColorStop(0.4, 'rgba(210,228,248,0.18)');
-              g.addColorStop(1, 'rgba(0,0,0,0)');
-              octx.fillStyle = g;
-              octx.beginPath();
-              octx.arc(cx, cy, cr * 1.6, 0, Math.PI * 2);
-              octx.fill();
-              star._glow = off;
-              stars.push(star);
-            }
-            constellations.push({ pts: pts, ln: p.ln });
-          }
-        }
-
-        function drawStar(s, t) {
-          var a = s.baseA;
-          var v = Math.sin(t * s.spd + s.ph);
-          if (s.stl === 0)      a = a * (1 - s.amp * 0.6 + s.amp * 0.6 * v);
-          else if (s.stl === 1)  a = a * (1 - s.amp + s.amp * Math.abs(v));
-          else                   a = a * (1 - s.amp + s.amp * Math.pow(Math.abs(Math.sin(t * s.spd * 1.6 + s.ph)), 4));
-          if (a < 0) a = 0; if (a > 1) a = 1;
-          if (s.conId !== undefined) { a = a * 1.6; if (a > 1) a = 1; }
-          if (a < 0.04) return;
-
-          ctx.globalAlpha = a;
-          ctx.fillStyle = 'rgb(' + s.r + ',' + s.g + ',' + s.b + ')';
-          ctx.beginPath();
-          ctx.arc(s.x, s.y, s.radius * 0.35, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Blit pre-rendered glow (avoids createRadialGradient per frame)
-          if (s._glow) {
-            ctx.drawImage(s._glow, s.x - s._glow.width / 2, s.y - s._glow.height / 2);
-          }
-
-          if (s.radius > 2.8 && a > 0.6) {
-            ctx.strokeStyle = 'rgba(' + s.r + ',' + s.g + ',' + s.b + ',' + (a * 0.25).toFixed(3) + ')';
-            ctx.lineWidth = 0.4;
-            var L = s.radius * 2.6;
-            ctx.beginPath(); ctx.moveTo(s.x - L, s.y); ctx.lineTo(s.x + L, s.y); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(s.x, s.y - L); ctx.lineTo(s.x, s.y + L); ctx.stroke();
-          }
-        }
-
-        function drawConLines(a) {
-          for (var c = 0; c < constellations.length; c++) {
-            var con = constellations[c];
-            ctx.strokeStyle = 'rgba(160,220,255,' + (a * 0.45).toFixed(3) + ')';
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            for (var i = 0; i < con.ln.length; i++) {
-              var f = con.ln[i][0], t = con.ln[i][1];
-              ctx.moveTo(con.pts[f].x, con.pts[f].y);
-              ctx.lineTo(con.pts[t].x, con.pts[t].y);
-            }
-            ctx.stroke();
-            ctx.strokeStyle = 'rgba(200,240,255,' + a.toFixed(3) + ')';
-            ctx.lineWidth = 0.9;
-            ctx.beginPath();
-            for (var i2 = 0; i2 < con.ln.length; i2++) {
-              var f2 = con.ln[i2][0], t2 = con.ln[i2][1];
-              ctx.moveTo(con.pts[f2].x, con.pts[f2].y);
-              ctx.lineTo(con.pts[t2].x, con.pts[t2].y);
-            }
-            ctx.stroke();
-          }
-        }
-
-        function animate(ts) {
-          if (ts - lastFrame < FRAME_MS) {
-            animId = requestAnimationFrame(animate);
-            return;
-          }
-          lastFrame = ts;
-
-          var t = ts * 0.001;
-          ctx.clearRect(0, 0, W, H);
-          drawConLines(0.55 + 0.12 * Math.sin(t * 0.23));
-          for (var i = 0; i < stars.length; i++) drawStar(stars[i], t);
-          animId = requestAnimationFrame(animate);
-        }
-
-        function start() {
-          resize();
-          makeStars();
-          makeCons();
-          if (animId) cancelAnimationFrame(animId);
-          lastFrame = 0;
-          animId = requestAnimationFrame(animate);
-        }
-
-        start();
-        var rt;
-        window.addEventListener('resize', function() {
-          clearTimeout(rt);
-          rt = setTimeout(start, 250);
-        });
-
-        var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-        function onMQ(e) {
-          if (e.matches) {
-            cancelAnimationFrame(animId);
-            ctx.clearRect(0, 0, W, H);
-            drawConLines(0.6);
-            for (var i = 0; i < stars.length; i++) drawStar(stars[i], 2.5);
+        document.addEventListener('visibilitychange', () => {
+          if (!loadStarted) return;
+          if (document.hidden) {
+            video.pause();
           } else {
-            lastFrame = 0;
-            animId = requestAnimationFrame(animate);
+            video.play().catch(() => {});
           }
+        });
+
+        const opening = document.getElementById('opening-sequence');
+        const openingActive = opening && !opening.classList.contains('idle');
+        if (openingActive) {
+          window.addEventListener('sqkstt:opening-settled', () => scheduleStart(450), { once: true });
+        } else {
+          const requestIdle = window.requestIdleCallback || ((cb) => window.setTimeout(cb, 900));
+          requestIdle(() => scheduleStart(0));
         }
-        if (mq.matches) onMQ(mq);
-        mq.addEventListener('change', onMQ);
       })();
     </script>
 
     <script is:inline>
       (() => {
-        // --- Reading progress ---
+        // --- Reading progress + Back to top（合并为单个 rAF 节流的 scroll 处理器）---
         const bar = document.getElementById('reading-progress');
+        const btn = document.getElementById('back-to-top');
+
         const updateProgress = () => {
           if (!bar) return;
           const h = document.documentElement;
@@ -420,14 +187,25 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
             : 0;
           bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
         };
-        window.addEventListener('scroll', updateProgress, { passive: true });
+
+        const toggleBtn = () => {
+          if (btn) btn.classList.toggle('visible', window.scrollY > 400);
+        };
+
+        let scrollRaf = 0;
+        const onScroll = () => {
+          if (scrollRaf) return;
+          scrollRaf = requestAnimationFrame(() => {
+            scrollRaf = 0;
+            updateProgress();
+            toggleBtn();
+          });
+        };
+
+        window.addEventListener('scroll', onScroll, { passive: true });
         updateProgress();
 
-        // --- Back to top ---
-        const btn = document.getElementById('back-to-top');
         if (btn) {
-          const toggleBtn = () => btn.classList.toggle('visible', window.scrollY > 400);
-          window.addEventListener('scroll', toggleBtn, { passive: true });
           toggleBtn();
           btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
         }
@@ -511,6 +289,125 @@ const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url).toString();
               // fallback silently
             }
           });
+        }
+      })();
+    </script>
+    <script is:inline>
+      (() => {
+        document.querySelectorAll('.post-card').forEach((card) => {
+          card.classList.add('glow-border');
+          if (!card.querySelector(':scope > .card-glow')) {
+            const glow = document.createElement('span');
+            glow.className = 'card-glow';
+            glow.setAttribute('aria-hidden', 'true');
+            card.prepend(glow);
+          }
+        });
+
+        const counters = document.querySelectorAll('[data-count]');
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduceMotion) {
+          counters.forEach((el) => { el.textContent = el.getAttribute('data-count') || '0'; });
+          return;
+        }
+
+        // 滚动渐入：把目标区块标记为 .reveal，进入视口加 .in-view，按 DOM 顺序错峰
+        const groups = [
+          '.post-card',
+          '.stat-card',
+          '.directory-tag',
+          '.content-heading',
+          '.directory-head',
+          '.home-sidebar',
+          '.toc-panel',
+        ];
+
+        // 先给目标加 .reveal
+        const targets = [];
+        groups.forEach((sel) => {
+          document.querySelectorAll(sel).forEach((el) => {
+            el.classList.add('reveal');
+            targets.push(el);
+          });
+        });
+
+        targets
+          .sort((a, b) => {
+            if (a === b) return 0;
+            return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+          })
+          .forEach((el, i) => {
+            el.style.setProperty('--reveal-d', Math.min(i, 6) * 70 + 'ms');
+        });
+
+        if (!('IntersectionObserver' in window) || !targets.length) {
+          targets.forEach((el) => el.classList.add('in-view'));
+        }
+        if ('IntersectionObserver' in window && targets.length) {
+          const io = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('in-view');
+                io.unobserve(entry.target);
+              }
+            });
+          }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+
+          targets.forEach((el) => io.observe(el));
+        }
+
+        // 统计数字递增：进入视口时从 0 递增到 data-count（easeOutCubic）
+        const runCount = (el) => {
+          const target = parseInt(el.getAttribute('data-count') || '0', 10);
+          if (!target || target <= 0) { el.textContent = String(target); return; }
+          const duration = 1200;
+          const start = performance.now();
+          const tick = (now) => {
+            const p = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - p, 3);
+            el.textContent = String(Math.round(target * eased));
+            if (p < 1) requestAnimationFrame(tick);
+            else el.textContent = String(target);
+          };
+          requestAnimationFrame(tick);
+        };
+
+        if (!('IntersectionObserver' in window) || !counters.length) {
+          counters.forEach((el) => { el.textContent = el.getAttribute('data-count') || '0'; });
+        } else {
+          const cio = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                runCount(entry.target);
+                cio.unobserve(entry.target);
+              }
+            });
+          }, { threshold: 0.5 });
+          counters.forEach((el) => cio.observe(el));
+        }
+
+        // 导航滑动光条：跟随 active 项，hover 其他项时跟随
+        const navLinks = document.querySelector('.nav-links');
+        const navIndicator = document.querySelector('.nav-indicator');
+        if (navLinks && navIndicator) {
+          const links = navLinks.querySelectorAll('a');
+          const placeIndicator = (el) => {
+            if (!el) { navIndicator.classList.remove('visible'); return; }
+            const navRect = navLinks.getBoundingClientRect();
+            const rect = el.getBoundingClientRect();
+            navIndicator.style.width = rect.width + 'px';
+            navIndicator.style.transform = `translateX(${rect.left - navRect.left}px)`;
+            navIndicator.classList.add('visible');
+          };
+
+          const activeLink = navLinks.querySelector('a.active');
+          requestAnimationFrame(() => placeIndicator(activeLink));
+
+          links.forEach((link) => {
+            link.addEventListener('pointerenter', () => placeIndicator(link));
+          });
+          navLinks.addEventListener('pointerleave', () => placeIndicator(activeLink));
+          window.addEventListener('resize', () => placeIndicator(activeLink));
         }
       })();
     </script>
