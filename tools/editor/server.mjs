@@ -18,6 +18,7 @@ let previewProcess;
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
+app.use('/assets', express.static(resolve(rootDir, 'public/assets')));
 
 function today() {
   return new Date().toISOString().slice(0, 10);
