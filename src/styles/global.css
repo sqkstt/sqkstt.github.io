@@ -1920,8 +1920,8 @@ main {
   --surface-strong: rgba(255, 255, 255, 0.62);
   --surface-warm: rgba(255, 247, 224, 0.56);
   --surface-cool: rgba(225, 244, 255, 0.5);
-  --text: #18314a;
-  --muted: #5d7184;
+  --text: #0f2d45;
+  --muted: #314d67;
   --border: rgba(47, 124, 178, 0.22);
   --border-strong: rgba(33, 119, 184, 0.42);
   --accent: #1976bc;
@@ -2067,7 +2067,8 @@ body.opening-handoff.blog-scene-live main {
 }
 
 .nav-links a {
-  color: #50687d;
+  color: #284b65;
+  font-weight: 700;
 }
 
 .nav-links a:hover,
@@ -2148,7 +2149,7 @@ main {
 .hero-panel h1,
 .article-header h1,
 .page-hero h1 {
-  color: #102f4a;
+  color: #092840;
   text-shadow: none;
 }
 
@@ -2160,6 +2161,15 @@ main {
 .home-author-text p,
 .home-rss-text p {
   color: var(--muted);
+  font-weight: 500;
+}
+
+.meta,
+.reading-time,
+.toc-meta-label,
+.toc-share-btn,
+.stat-card span:last-child {
+  font-weight: 500;
 }
 
 .primary-link {
@@ -2206,16 +2216,19 @@ main {
 
 .stat-card strong,
 .content-heading h2,
+.post-card h2,
 .post-card h3,
 .rich-empty strong,
 .home-author-text strong,
 .home-rss-text strong,
 .toc-heading,
+.directory-head h2,
 .directory-head h1,
 .directory-panel h1,
 .article-body h2,
 .article-body h3 {
-  color: #143450;
+  color: #0f2d45;
+  font-weight: 800;
   text-shadow: none;
 }
 
@@ -2233,7 +2246,8 @@ main {
 }
 
 .article-body {
-  color: #223f59;
+  color: #123954;
+  font-weight: 500;
 }
 
 .article-body blockquote {
@@ -2280,6 +2294,7 @@ main {
 
 .toc-list a {
   color: var(--muted);
+  font-weight: 600;
 }
 
 .toc-list a:hover,
@@ -2292,7 +2307,8 @@ main {
 .site-footer {
   border-top-color: rgba(25, 118, 188, 0.18);
   background: rgba(255, 255, 255, 0.42);
-  color: #5d7184;
+  color: var(--muted);
+  font-weight: 500;
 }
 
 .back-to-top {
