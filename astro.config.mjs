@@ -6,6 +6,9 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   site: process.env.SITE_URL ?? 'https://sqkstt.github.io',
   integrations: [sitemap()],
+  vite: {
+    cacheDir: '.astro/vite',
+  },
   devToolbar: {
     enabled: false,
   },

@@ -538,6 +538,7 @@ app.use((error, _req, res, _next) => {
 
 const vite = await createViteServer({
   root: join(editorDir, 'client'),
+  cacheDir: resolve(rootDir, '.astro/editor-vite'),
   server: { middlewareMode: true },
   appType: 'spa',
 });

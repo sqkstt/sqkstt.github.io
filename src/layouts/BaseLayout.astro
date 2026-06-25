@@ -53,7 +53,7 @@ const shouldRenderOpening = Astro.url.pathname === '/';
         muted
         loop
         playsinline
-        preload="none"
+        preload="metadata"
         poster="/assets/wind-frames/saber-wind-00.webp"
       >
         <source data-src="/assets/saber1.mp4" type="video/mp4" />
@@ -123,8 +123,17 @@ const shouldRenderOpening = Astro.url.pathname === '/';
           toggle.hidden = false;
         };
 
+        const showVideo = () => {
+          if (video.readyState < 2) return;
+          document.body.classList.add('bg-video-live');
+        };
+
         if (video.readyState >= 1) showToggle();
         else video.addEventListener('loadedmetadata', showToggle, { once: true });
+        video.addEventListener('playing', showVideo);
+        video.addEventListener('canplay', () => {
+          if (!video.paused) showVideo();
+        });
 
         video.muted = true;
         video.volume = 0.65;
@@ -132,7 +141,9 @@ const shouldRenderOpening = Astro.url.pathname === '/';
         const startMuted = () => {
           loadVideo();
           video.muted = true;
-          video.play().catch(() => {});
+          requestAnimationFrame(() => {
+            video.play().then(showVideo).catch(() => {});
+          });
         };
 
         const scheduleStart = (delay = 0) => {
@@ -140,12 +151,19 @@ const shouldRenderOpening = Astro.url.pathname === '/';
           startTimer = window.setTimeout(startMuted, delay);
         };
 
+        window.addEventListener('sqkstt:opening-start', () => {
+          window.clearTimeout(startTimer);
+          document.body.classList.remove('bg-video-live');
+          if (!video.paused) video.pause();
+        });
+
         toggle.addEventListener('click', async () => {
           loadVideo();
           const enableAudio = video.muted;
           video.muted = !enableAudio;
           try {
             await video.play();
+            showVideo();
             setAudioState(enableAudio);
           } catch {
             video.muted = true;
@@ -165,7 +183,8 @@ const shouldRenderOpening = Astro.url.pathname === '/';
         const opening = document.getElementById('opening-sequence');
         const openingActive = opening && !opening.classList.contains('idle');
         if (openingActive) {
-          window.addEventListener('sqkstt:opening-settled', () => scheduleStart(450), { once: true });
+          window.addEventListener('sqkstt:opening-handoff', loadVideo, { once: true });
+          window.addEventListener('sqkstt:opening-settled', () => scheduleStart(4200), { once: true });
         } else {
           const requestIdle = window.requestIdleCallback || ((cb) => window.setTimeout(cb, 900));
           requestIdle(() => scheduleStart(0));
@@ -324,6 +343,7 @@ const shouldRenderOpening = Astro.url.pathname === '/';
 
         // 先给目标加 .reveal
         const targets = [];
+        let revealObserver = null;
         groups.forEach((sel) => {
           document.querySelectorAll(sel).forEach((el) => {
             el.classList.add('reveal');
@@ -344,17 +364,34 @@ const shouldRenderOpening = Astro.url.pathname === '/';
           targets.forEach((el) => el.classList.add('in-view'));
         }
         if ('IntersectionObserver' in window && targets.length) {
-          const io = new IntersectionObserver((entries) => {
+          revealObserver = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
               if (entry.isIntersecting) {
                 entry.target.classList.add('in-view');
-                io.unobserve(entry.target);
+                revealObserver.unobserve(entry.target);
               }
             });
           }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
 
-          targets.forEach((el) => io.observe(el));
+          targets.forEach((el) => revealObserver.observe(el));
         }
+
+        const primeOpeningViewport = () => {
+          const bottom = window.innerHeight * 1.12;
+          targets.forEach((el) => {
+            if (el.classList.contains('in-view')) return;
+            const rect = el.getBoundingClientRect();
+            if (rect.bottom >= -80 && rect.top <= bottom) {
+              el.style.setProperty('--reveal-d', '0ms');
+              el.classList.add('in-view');
+              revealObserver?.unobserve(el);
+            }
+          });
+        };
+
+        window.addEventListener('sqkstt:opening-handoff', () => {
+          requestAnimationFrame(primeOpeningViewport);
+        }, { once: true });
 
         // 统计数字递增：进入视口时从 0 递增到 data-count（easeOutCubic）
         const runCount = (el) => {

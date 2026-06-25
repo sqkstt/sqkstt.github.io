@@ -393,6 +393,7 @@ a:hover {
 main {
   flex: 1;
   padding: 56px 0 72px;
+  transform: translateZ(0);
 }
 
 .hero-panel,
@@ -1589,6 +1590,17 @@ main {
   transform: none;
 }
 
+body.opening-handoff .site-shell,
+body.opening-handoff .space-bg,
+body.opening-handoff main {
+  will-change: opacity, transform;
+}
+
+body.opening-handoff .reveal {
+  transition-delay: 0ms !important;
+  transition-duration: 280ms;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .reveal {
     opacity: 1;
@@ -1976,9 +1988,15 @@ body {
   object-position: center center;
   pointer-events: none;
   filter: saturate(1.12) contrast(1.05);
-  opacity: 1;
+  opacity: 0;
   transform: none;
   background: url("/assets/wind-frames/saber-wind-00.webp") center center / cover no-repeat;
+  transition: opacity 3400ms ease;
+  will-change: opacity;
+}
+
+body.bg-video-live .saber-bg-video {
+  opacity: 1;
 }
 
 .space-bg::after {
@@ -2262,7 +2280,8 @@ main {
 .article-body code {
   border-color: rgba(25, 118, 188, 0.16);
   background: rgba(255, 255, 255, 0.66);
-  color: #0f609b;
+  color: #063f67;
+  font-weight: 700;
 }
 
 .article-body pre {
@@ -2272,6 +2291,15 @@ main {
     linear-gradient(180deg, rgba(25, 118, 188, 0.03) 1px, transparent 1px),
     rgba(248, 252, 255, 0.9) !important;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.72), 0 18px 42px rgba(59, 99, 129, 0.12);
+}
+
+.article-body pre code {
+  color: #071f33;
+  font-weight: 600;
+}
+
+.article-body pre code span {
+  color: #071f33 !important;
 }
 
 .article-body table thead,

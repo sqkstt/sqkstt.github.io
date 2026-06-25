@@ -56,6 +56,19 @@ function parseTags(value) {
     .filter(Boolean);
 }
 
+function metaSnapshot(post) {
+  return JSON.stringify({
+    title: post.title,
+    description: post.description,
+    category: post.category,
+    tags: post.tags,
+    pubDate: post.pubDate,
+    updatedDate: post.updatedDate,
+    draft: post.draft,
+    filename: post.filename,
+  });
+}
+
 function App() {
   const [context, setContext] = useState({ rootDir: '', blogPreviewUrl: 'http://127.0.0.1:4321/' });
   const [posts, setPosts] = useState([]);
@@ -100,6 +113,8 @@ function App() {
   async function loadPost(id) {
     const { post: nextPost } = await requestJson(`/api/posts/${encodeURIComponent(id)}`);
     setActiveId(id);
+    lastMetaRef.current = metaSnapshot(nextPost);
+    savedBodyRef.current = nextPost.body;
     setPost(nextPost);
     clearDeleteConfirm();
     setStatus(`已打开 ${nextPost.filename}`);
@@ -123,7 +138,11 @@ function App() {
         setContext(nextContext);
         setPosts(nextPosts);
         setTaxonomy(nextTaxonomy);
-        setStatus(nextPosts.length > 0 ? '请选择文章开始编辑' : '当前还没有文章，点击新建开始');
+        if (nextPosts.length > 0) {
+          await loadPost(nextPosts[0].id);
+        } else {
+          setStatus('当前还没有文章，点击新建开始');
+        }
       } catch (error) {
         setStatus(error.message);
       }
@@ -137,6 +156,7 @@ function App() {
     if (!activeId) return;
     try {
       const { post: fresh } = await requestJson(`/api/posts/${encodeURIComponent(activeId)}`);
+      lastMetaRef.current = metaSnapshot(fresh);
       setPost(fresh);
       savedBodyRef.current = fresh.body;
       setStatus('已刷新');
@@ -160,11 +180,7 @@ function App() {
 
   useEffect(() => {
     if (!activeId) return;
-    const metaKey = JSON.stringify({
-      title: post.title, description: post.description, category: post.category,
-      tags: post.tags, pubDate: post.pubDate, updatedDate: post.updatedDate,
-      draft: post.draft, filename: post.filename,
-    });
+    const metaKey = metaSnapshot(post);
     if (metaKey === lastMetaRef.current) return;
 
     clearTimeout(saveMetaTimerRef.current);
